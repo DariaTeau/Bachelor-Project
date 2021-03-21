@@ -8,14 +8,23 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import android.widget.Button
 import android.widget.TextView
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 
 class UserProfileActivity : AppCompatActivity() {
-    private  lateinit var bt : Button
+    lateinit var mGoogleSignInClient : GoogleSignInClient
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_user_profile)
 
-        bt = findViewById(R.id.button)
+        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken("318758695349-3ntogdpicl027jop4dqtb05jd2jvgd1v.apps.googleusercontent.com")
+                .requestEmail()
+                .build()
+
+        mGoogleSignInClient = GoogleSignIn.getClient(this, gso)
+
     }
 
     override fun onCreateOptionsMenu(menu: Menu) : Boolean {
@@ -25,23 +34,15 @@ class UserProfileActivity : AppCompatActivity() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        // Handle item selection
         return when (item.itemId) {
             R.id.it_signOut -> {
-                MainActivity.mGoogleSignInClient.signOut().addOnCompleteListener {
+                mGoogleSignInClient.signOut().addOnCompleteListener {
                     backToLogin()
                 }
-//                val intent = Intent(this, UploadPhotoActivity::class.java).apply {}
-//                startActivity(intent)
                 true
             }
-//            R.id.help -> {
-//                showHelp()
-//                true
-//            }
             else -> super.onOptionsItemSelected(item)
         }
-        //return true
     }
 
     private fun backToLogin() {

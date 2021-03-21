@@ -22,9 +22,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var loginButton : Button
     private lateinit var registerButton : Button
     private lateinit var googleLoginButton : SignInButton
-    companion object{
-        lateinit var mGoogleSignInClient : GoogleSignInClient
-    }
+    lateinit var mGoogleSignInClient : GoogleSignInClient
+
 
     private var usersMap : HashMap<String, String> = HashMap()
 
@@ -41,17 +40,9 @@ class MainActivity : AppCompatActivity() {
 
         usersMap["ana"] = "1234"
 
-        //set on click listener pe buton
-        // in functia aia fac verificarile ca userul si parola sunt bune
-        // nu am DB momentan asa ca o sa pun niste useri si parole intr-un hashmap
-        // daca nu sunt bune display a toast, altfel navigam la activity-ul cu harta
-        // adaug jos un text daca esti nou da register -> si bag userul in map <=> inserez in DB
-
         loginButton.setOnClickListener{ login() }
         registerButton.setOnClickListener { register() }
 
-//        var gso : GoogleSignInOptions =  GoogleSignInOptions.DEFAULT_SIGN_IN
-//        gso.
 
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestIdToken("318758695349-3ntogdpicl027jop4dqtb05jd2jvgd1v.apps.googleusercontent.com")
@@ -62,8 +53,7 @@ class MainActivity : AppCompatActivity() {
 
         var account : GoogleSignInAccount? = GoogleSignIn.getLastSignedInAccount(this);
         if (account != null) {
-            val intent = Intent(this, MapActivity::class.java).apply {}
-            startActivity(intent)
+            goToMapActivity()
         } else {
             googleLoginButton = findViewById(R.id.sign_in_button)
             googleLoginButton.setOnClickListener{
@@ -88,8 +78,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         Toast.makeText(this, "Successful Login", Toast.LENGTH_SHORT).show()
-        val intent = Intent(this, MapActivity::class.java).apply {}
-        startActivity(intent)
+        goToMapActivity()
     }
 
     private fun register() {
@@ -124,16 +113,15 @@ class MainActivity : AppCompatActivity() {
 
         if(account != null) {
             // Signed in successfully, show authenticated UI.
-            val intent : Intent = Intent(this, MapActivity::class.java).apply {}
-            startActivity(intent)
+            goToMapActivity()
         } else {
-            // The ApiException status code indicates the detailed failure reason.
-            // Please refer to the GoogleSignInStatusCodes class reference for more information.
-            //Log.w("handleSignInResult","signInResult:failed code=" + e.statusCode);
-
             Toast.makeText(this, "Failed to Sign In with Google", Toast.LENGTH_SHORT).show()
         }
     }
 
+    private fun goToMapActivity() {
+        val intent : Intent = Intent(this, MapActivity::class.java).apply {}
+        startActivity(intent)
+    }
 
 }
