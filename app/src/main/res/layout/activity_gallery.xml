@@ -17,6 +17,8 @@
         android:textColor="#526838"
         android:textSize="14sp"
         android:textStyle="bold"
+        app:backgroundTint="#E3F1E4"
+        app:cornerRadius="2dp"
         app:icon="@android:drawable/ic_menu_gallery"
         app:iconTint="#82A35B"
         app:layout_constraintBottom_toBottomOf="parent"

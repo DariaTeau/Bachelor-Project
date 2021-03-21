@@ -3,18 +3,32 @@ package com.example.rotravel
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.SignInButton
+import com.google.android.gms.common.api.ApiException
+import com.google.android.gms.tasks.Task
 
 class MainActivity : AppCompatActivity() {
     private lateinit var user : EditText
     private lateinit var password : EditText
     private lateinit var loginButton : Button
     private lateinit var registerButton : Button
+    private lateinit var googleLoginButton : SignInButton
+    companion object{
+        lateinit var mGoogleSignInClient : GoogleSignInClient
+    }
 
     private var usersMap : HashMap<String, String> = HashMap()
+
+    private val reqCodeSignIn = 1
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,6 +49,27 @@ class MainActivity : AppCompatActivity() {
 
         loginButton.setOnClickListener{ login() }
         registerButton.setOnClickListener { register() }
+
+//        var gso : GoogleSignInOptions =  GoogleSignInOptions.DEFAULT_SIGN_IN
+//        gso.
+
+        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken("318758695349-3ntogdpicl027jop4dqtb05jd2jvgd1v.apps.googleusercontent.com")
+            .requestEmail()
+            .build()
+
+        mGoogleSignInClient = GoogleSignIn.getClient(this, gso)
+
+        var account : GoogleSignInAccount? = GoogleSignIn.getLastSignedInAccount(this);
+        if (account != null) {
+            val intent = Intent(this, MapActivity::class.java).apply {}
+            startActivity(intent)
+        } else {
+            googleLoginButton = findViewById(R.id.sign_in_button)
+            googleLoginButton.setOnClickListener{
+                googleSignIn()
+            }
+        }
 
     }
 
@@ -69,6 +104,35 @@ class MainActivity : AppCompatActivity() {
         usersMap[inputUser] = inputPassword
 
         Toast.makeText(this, "Successful Registration", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun googleSignIn() {
+        var  signInIntent : Intent? = mGoogleSignInClient.signInIntent;
+        startActivityForResult(signInIntent, reqCodeSignIn);
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == reqCodeSignIn && data != null) {
+            var  task : Task<GoogleSignInAccount> = GoogleSignIn.getSignedInAccountFromIntent(data);
+            handleSignInResult(task);
+        }
+    }
+
+    private fun handleSignInResult(completedTask : Task<GoogleSignInAccount>) {
+        var  account : GoogleSignInAccount? = completedTask.result
+
+        if(account != null) {
+            // Signed in successfully, show authenticated UI.
+            val intent : Intent = Intent(this, MapActivity::class.java).apply {}
+            startActivity(intent)
+        } else {
+            // The ApiException status code indicates the detailed failure reason.
+            // Please refer to the GoogleSignInStatusCodes class reference for more information.
+            //Log.w("handleSignInResult","signInResult:failed code=" + e.statusCode);
+
+            Toast.makeText(this, "Failed to Sign In with Google", Toast.LENGTH_SHORT).show()
+        }
     }
 
 
