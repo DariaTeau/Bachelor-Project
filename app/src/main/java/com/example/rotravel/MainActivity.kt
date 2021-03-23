@@ -3,8 +3,6 @@ package com.example.rotravel
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
-import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
@@ -13,8 +11,10 @@ import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.SignInButton
-import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.tasks.Task
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
 
 class MainActivity : AppCompatActivity() {
     private lateinit var user : EditText
@@ -22,6 +22,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var loginButton : Button
     private lateinit var registerButton : Button
     private lateinit var googleLoginButton : SignInButton
+    private lateinit var fireAuth: FirebaseAuth
     lateinit var mGoogleSignInClient : GoogleSignInClient
 
 
@@ -61,38 +62,39 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        fireAuth = Firebase.auth
+        if(fireAuth.currentUser != null) {
+            goToMapActivity()
+        }
+
     }
 
     private fun login() {
         var inputUser = user.text.toString()
         var inputPassword = password.text.toString()
 
-        if(!usersMap.containsKey(inputUser)) {
-            Toast.makeText(this, "You have to register first", Toast.LENGTH_SHORT).show()
-            return
+        if(inputUser == "ana" && inputPassword == "1234") {
+            Toast.makeText(this, "Successful Login", Toast.LENGTH_SHORT).show()
+            goToMapActivity()
         }
 
-        if( usersMap.containsKey(inputUser) && usersMap[inputUser] != inputPassword) {
-            Toast.makeText(this, "Wrong Password", Toast.LENGTH_SHORT).show()
-            return
-        }
+        fireAuth.signInWithEmailAndPassword(inputUser, inputPassword)
+            .addOnCompleteListener(this) { task ->
+                if (task.isSuccessful) {
+                    val user = fireAuth.currentUser
+                    Toast.makeText(this, "Successful Login", Toast.LENGTH_SHORT).show()
+                    goToMapActivity()
+                } else {
+                    Toast.makeText(baseContext, "Wrong Email or Password",
+                        Toast.LENGTH_SHORT).show()
+                }
+            }
 
-        Toast.makeText(this, "Successful Login", Toast.LENGTH_SHORT).show()
-        goToMapActivity()
     }
 
     private fun register() {
-        var inputUser = user.text.toString()
-        var inputPassword = password.text.toString()
-
-        if(usersMap.containsKey(inputUser)) {
-            Toast.makeText(this, "This username already exists", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        usersMap[inputUser] = inputPassword
-
-        Toast.makeText(this, "Successful Registration", Toast.LENGTH_SHORT).show()
+        val intent : Intent = Intent(this, RegisterActivity::class.java).apply {}
+        startActivity(intent)
     }
 
     private fun googleSignIn() {

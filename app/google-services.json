@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "164156353820",
+    "project_id": "rotravel-14ed2",
+    "storage_bucket": "rotravel-14ed2.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:164156353820:android:681045cfa4960db11e5ed9",
+        "android_client_info": {
+          "package_name": "com.example.rotravel"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "164156353820-k2c925jcb4ub1b3h7k4n7vmjvs5d4jg5.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDkfFCsxXP7DAUAKw0KThl5k0uhhUHxRxg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "164156353820-k2c925jcb4ub1b3h7k4n7vmjvs5d4jg5.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
