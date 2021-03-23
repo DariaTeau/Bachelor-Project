@@ -14,4 +14,6 @@
     <string name="uploaded_photo">uploaded photo</string>
     <string name="profile">Profile</string>
     <string name="sign_out">Sign Out</string>
+    <string name="enter_email">Enter Email</string>
+    <string name="enter_password">Enter Password</string>
 </resources>
