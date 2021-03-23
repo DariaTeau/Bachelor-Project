@@ -73,16 +73,6 @@ class MainActivity : AppCompatActivity() {
         var inputUser = user.text.toString()
         var inputPassword = password.text.toString()
 
-//        if(!usersMap.containsKey(inputUser)) {
-//            Toast.makeText(this, "You have to register first", Toast.LENGTH_SHORT).show()
-//            return
-//        }
-//
-//        if( usersMap.containsKey(inputUser) && usersMap[inputUser] != inputPassword) {
-//            Toast.makeText(this, "Wrong Password", Toast.LENGTH_SHORT).show()
-//            return
-//        }
-
         if(inputUser == "ana" && inputPassword == "1234") {
             Toast.makeText(this, "Successful Login", Toast.LENGTH_SHORT).show()
             goToMapActivity()
@@ -103,17 +93,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun register() {
-//        var inputUser = user.text.toString()
-//        var inputPassword = password.text.toString()
-//
-//        if(usersMap.containsKey(inputUser)) {
-//            Toast.makeText(this, "This username already exists", Toast.LENGTH_SHORT).show()
-//            return
-//        }
-//
-//        usersMap[inputUser] = inputPassword
-//
-//        Toast.makeText(this, "Successful Registration", Toast.LENGTH_SHORT).show()
         val intent : Intent = Intent(this, RegisterActivity::class.java).apply {}
         startActivity(intent)
     }

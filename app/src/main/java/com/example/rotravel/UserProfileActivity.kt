@@ -11,9 +11,13 @@ import android.widget.TextView
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
 
 class UserProfileActivity : AppCompatActivity() {
     lateinit var mGoogleSignInClient : GoogleSignInClient
+    lateinit var fireAuth : FirebaseAuth
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_user_profile)
@@ -24,6 +28,8 @@ class UserProfileActivity : AppCompatActivity() {
                 .build()
 
         mGoogleSignInClient = GoogleSignIn.getClient(this, gso)
+
+        fireAuth = Firebase.auth
 
     }
 
@@ -36,6 +42,10 @@ class UserProfileActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.it_signOut -> {
+                if(fireAuth.currentUser != null) {
+                    fireAuth.signOut()
+                    backToLogin()
+                }
                 mGoogleSignInClient.signOut().addOnCompleteListener {
                     backToLogin()
                 }
