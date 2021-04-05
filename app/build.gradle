@@ -10,7 +10,7 @@ android {
 
     defaultConfig {
         applicationId "com.example.rotravel"
-        minSdkVersion 19
+        minSdkVersion 24
         targetSdkVersion 30
         versionCode 1
         versionName "1.0"
@@ -57,6 +57,8 @@ dependencies {
     implementation 'com.google.firebase:firebase-storage-ktx'
     def multidex_version = "2.0.1"
     implementation "androidx.multidex:multidex:$multidex_version"
+    //implementation 'com.writingminds:FFmpegAndroid:0.3.2'
+    implementation 'com.arthenica:mobile-ffmpeg-full:4.4'
 
 
 }
