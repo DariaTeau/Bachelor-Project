@@ -55,9 +55,11 @@ class UploadPhotoActivity : AppCompatActivity(), OnMapReadyCallback,
                 LatLng((45.0), 22.0),  // SW bounds
                 LatLng((50.0), 31.0) // NE bounds
         )
+        var width : Int = resources.displayMetrics.widthPixels;
+        var height : Int = resources.displayMetrics.heightPixels;
         val centerMarker = MarkerOptions().position(romanianBounds.center).title("Choose your picture").draggable(true)
         mMap.addMarker(centerMarker)
-        mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(romanianBounds, 0))
+        mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(romanianBounds, width, height, 0))
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(romanianBounds.center, 6.2f))
         mMap.setLatLngBoundsForCameraTarget(cameraBounds)
 
@@ -84,6 +86,8 @@ class UploadPhotoActivity : AppCompatActivity(), OnMapReadyCallback,
         Log.i("onInfoWindowClick", "am dat click")
 
         val intent = Intent(this, GalleryActivity::class.java).apply {}
+        intent.putExtra("latitude", photoPos.latitude)
+        intent.putExtra("longitude", photoPos.longitude)
         startActivity(intent)
     }
 
