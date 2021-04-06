@@ -1,5 +1,6 @@
 package com.example.rotravel
 
+import android.net.Uri
 import com.google.firebase.database.IgnoreExtraProperties
 
 @IgnoreExtraProperties

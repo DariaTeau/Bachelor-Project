@@ -2,8 +2,9 @@ plugins {
     id 'com.android.application'
     id 'kotlin-android'
     id 'com.google.gms.google-services'
+    //id 'kotlin-kapt'
 }
-
+apply plugin: 'kotlin-kapt'
 android {
     compileSdkVersion 30
     buildToolsVersion "30.0.3"
@@ -59,6 +60,9 @@ dependencies {
     implementation "androidx.multidex:multidex:$multidex_version"
     //implementation 'com.writingminds:FFmpegAndroid:0.3.2'
     implementation 'com.arthenica:mobile-ffmpeg-full:4.4'
+    implementation 'com.firebaseui:firebase-ui-storage:4.3.2'
+    implementation 'com.github.bumptech.glide:compiler:4.9.0'
+    implementation 'com.squareup.picasso:picasso:2.71828'
 
 
 }

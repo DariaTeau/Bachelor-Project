@@ -97,9 +97,13 @@ class GalleryActivity : AppCompatActivity() {
             // taskSnapshot.metadata contains file metadata such as size, content-type, etc.
             val lat = intent.getDoubleExtra("latitude", 0.0)
             val lon = intent.getDoubleExtra("longitude", 0.0)
-            val info = ImgInfo(lat.toString(), lon.toString(), path, "spring")
-            newEntryRef.setValue(info)
-            Toast.makeText(this, "Upload successful", Toast.LENGTH_SHORT).show()
+           // photoRef.downloadUrl.toString()
+            photoRef.downloadUrl.addOnSuccessListener {
+                val info = ImgInfo(lat.toString(), lon.toString(), it.toString(), "spring")
+                newEntryRef.setValue(info)
+                Toast.makeText(this, "Upload successful", Toast.LENGTH_SHORT).show()
+            }
+
         }
     }
     private fun selectMultiple() {
