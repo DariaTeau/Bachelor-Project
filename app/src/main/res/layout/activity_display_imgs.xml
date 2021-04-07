@@ -6,23 +6,12 @@
     android:layout_height="match_parent"
     tools:context=".DisplayImgsActivity">
 
-    <ImageView
-        android:id="@+id/ivFromUser"
-        android:layout_width="349dp"
-        android:layout_height="320dp"
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvGallery"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.099"
-        tools:srcCompat="@tools:sample/backgrounds/scenic" />
-
-    <VideoView
-        android:id="@+id/vvFromUser"
-        android:layout_width="329dp"
-        android:layout_height="318dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/ivFromUser" />
+        app:layout_constraintTop_toTopOf="parent" />
 </androidx.constraintlayout.widget.ConstraintLayout>

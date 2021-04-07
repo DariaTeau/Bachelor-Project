@@ -124,9 +124,6 @@ class UserProfileActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.O
         //bundle.putParcelableArray()
         bundle.putStringArray("photos", photosUrls)
         intent.putExtras(bundle);
-//        intent.putExtra("latitude", photoPos.latitude)
-//        intent.putExtra("longitude", photoPos.longitude)
-        Log.i("onInfoWindowClick", photosUrls.size.toString())
         startActivity(intent)
     }
 
