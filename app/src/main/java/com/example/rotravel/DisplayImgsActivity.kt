@@ -14,7 +14,7 @@ import com.squareup.picasso.Picasso
 
 class DisplayImgsActivity : AppCompatActivity() {
     private lateinit var galleryView : RecyclerView
-    private lateinit var adapter : DisplayImgAdapter
+    private var adapter : DisplayImgAdapter? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_display_imgs)
@@ -22,7 +22,7 @@ class DisplayImgsActivity : AppCompatActivity() {
         galleryView = findViewById(R.id.rvGallery)
         galleryView.layoutManager = GridLayoutManager(this, 3, GridLayoutManager.VERTICAL, false)
         val arr = intent.getStringArrayExtra("photos")
-        adapter = DisplayImgAdapter(arr!!.takeLast(2).toTypedArray())
+        adapter = arr?.let { DisplayImgAdapter(it) }
         galleryView.adapter = adapter
     }
 }

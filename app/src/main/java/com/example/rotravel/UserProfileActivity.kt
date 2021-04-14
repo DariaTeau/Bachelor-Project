@@ -33,8 +33,8 @@ class UserProfileActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.O
     lateinit var fireAuth : FirebaseAuth
     private lateinit var fireDB : DatabaseReference
     private lateinit var mMap: GoogleMap
-    private var markers : Array<LatLng> = arrayOf<LatLng>()
-    private var photosUrls : Array<String> = arrayOf<String>()
+    private var photosUrls : HashMap<String, Array<String>> = HashMap()
+    private var videosUrls : HashMap<String, Array<String>> = HashMap()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_user_profile)
@@ -52,6 +52,9 @@ class UserProfileActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.O
 
         fireAuth = Firebase.auth
         fireDB = Firebase.database("https://rotravel-14ed2-default-rtdb.europe-west1.firebasedatabase.app/").reference
+
+        photosUrls = intent.getSerializableExtra("imgMap") as HashMap<String, Array<String>>
+        videosUrls = intent.getSerializableExtra("videoMap") as HashMap<String, Array<String>>
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
@@ -104,25 +107,37 @@ class UserProfileActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.O
     }
 
     private fun getUserPins() {
-        fireDB.child("Photos").child(fireAuth.uid!!).get().addOnSuccessListener {
-            for(ds in it.children) {
-                var lat = ds.child("lat")
-                var lon = ds.child("lon")
-                Log.i("getFromDB", lat.value.toString() + " " + lon.value.toString())
-                var marker = LatLng(lat.value.toString().toDouble(), lon.value.toString().toDouble())
-                photosUrls += ds.child("url").value.toString()
-                mMap.addMarker(MarkerOptions().position(marker).title("marker").title("Photos"))
-            }
-
+//        fireDB.child("Photos").child(fireAuth.uid!!).get().addOnSuccessListener {
+//            for(ds in it.children) {
+//                var lat = ds.child("lat")
+//                var lon = ds.child("lon")
+//                Log.i("getFromDB", lat.value.toString() + " " + lon.value.toString())
+//                var marker = LatLng(lat.value.toString().toDouble(), lon.value.toString().toDouble())
+//                val url = ds.child("url").value.toString()
+//                if(url.contains("mp4")) {
+//                    videosUrls += url
+//                } else {
+//                    photosUrls += url
+//                }
+//                mMap.addMarker(MarkerOptions().position(marker).title("marker").title("Photos"))
+//            }
+//
+//        }
+        for(key in photosUrls.keys) {
+            val pos = key.split("&").toTypedArray()
+            val marker = LatLng(pos[0].toDouble(), pos[1].toDouble())
+            mMap.addMarker(MarkerOptions().position(marker).title("marker").title("Photos"))
         }
     }
 
     override fun onInfoWindowClick(marker: Marker) {
 
         val intent = Intent(this, DisplayImgsActivity::class.java).apply {}
+        //val intent = Intent(this, ChooseMediaActivity::class.java).apply {}
         var bundle : Bundle = Bundle()
-        //bundle.putParcelableArray()
-        bundle.putStringArray("photos", photosUrls)
+        val key = marker.position.latitude.toString() + "&" + marker.position.longitude.toString()
+        bundle.putStringArray("videos", videosUrls[key])
+        bundle.putStringArray("photos", photosUrls[key])
         intent.putExtras(bundle);
         startActivity(intent)
     }

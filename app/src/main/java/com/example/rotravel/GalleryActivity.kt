@@ -42,6 +42,7 @@ class GalleryActivity : AppCompatActivity() {
     private lateinit var fireAuth : FirebaseAuth
     private lateinit var fireDB : DatabaseReference
     private var videoImgs : Array<Uri> = arrayOf<Uri>()
+    private var paths : Array<String> = arrayOf<String>()
     private val imgReqCode = 100
     private var imgUri : Uri? = null
     private val TAG = "executing ffmpeg command"
@@ -159,10 +160,11 @@ class GalleryActivity : AppCompatActivity() {
 
 
     private fun initFfmpeg() {
+        transpose()
         val command = createCommand()
         var rc = FFmpeg.execute(command)
         if (rc == RETURN_CODE_SUCCESS) {
-            Log.i(TAG, "Command execution completed successfully.");
+            Log.i(TAG, "Command execution completed successfully.")
             createdVideo.setVideoPath("/storage/emulated/0/Videos/output.mp4")
             createdVideo.requestFocus()
             createdVideo.start()
@@ -184,12 +186,40 @@ class GalleryActivity : AppCompatActivity() {
         return attr
     }
 
+    private fun transpose() {
+        var test : File = File("/storage/emulated/0/Rotated");
+        if (!test.exists()) {
+            test.mkdirs()
+        }
+        for(i in 0..videoImgs.size - 1) {
+            val path = getPath(this, videoImgs[i])
+            paths += path
+            if(getOrientation(path) == "6") {
+                var comm = arrayOf<String>()
+                comm += "-i"
+                comm += path
+                comm += "-vf"
+                //val partial = "scale=4640:3472,setsar=1,pad=4640:3472:(ow-iw)/2:(oh-ih)/2"
+                comm += ("transpose=dir=1")
+                comm += "-y"
+                comm += ("/storage/emulated/0/Rotated/output$i.jpeg")
+                var rc = FFmpeg.execute(comm)
+                if (rc == RETURN_CODE_SUCCESS) {
+                    Log.i(TAG, "Command execution completed successfully when transposing.")
+                    videoImgs[i] = Uri.fromFile(File("/storage/emulated/0/Rotated/output$i.jpeg"))
+                    paths[i] = "/storage/emulated/0/Rotated/output$i.jpeg"
+                }
+            }
+        }
+    }
+
     private fun createCommand() : Array<String>{
         var comm = arrayOf<String>()
         val count = videoImgs.size
         var idx = 1;
         var param = ""
         var path = ""
+        comm += "-noautorotate"
         for (i in 0..count - 1) {
             comm += "-framerate"
             comm += "25"
@@ -197,7 +227,7 @@ class GalleryActivity : AppCompatActivity() {
             comm += "2"
             comm += "-loop"
             comm += "1"
-            path = getPath(this, videoImgs[i])
+            path = paths[i]  //getPath(this, videoImgs[i])
             comm += "-i"
             comm += path
             param += "[" + i + "]"
@@ -210,14 +240,21 @@ class GalleryActivity : AppCompatActivity() {
             else
                 Log.e("FILE", "DIDNT MAKE IT!!")
         }
-        param += "concat=n=" + count + ":v=1:a=0,format=yuv420p[v]"
+        //val partial = "[0:v] scale=iw*min(1920/iw\\\\,1080/ih):ih*min(1920/iw\\\\,1080/ih), pad=1920:1080:(1920-iw*min(1920/iw\\\\,1080/ih))/2:(1080-ih*min(1920/iw\\\\,1080/ih))/2,setsar=1:1[v0];[v0][0:a] "
+        //:force_original_aspect_ratio=decrease
+        //[1:v]scale=4640:3472,setsar=1,pad=4640:3472:(ow-iw)/2:(oh-ih)/2[1v];
+        //[1v][1:a]
+        //val partial = "[0:v]scale=4640:3472,setsar=1,pad=4640:3472:(ow-iw)/2:(oh-ih)/2[0v];[0v][0:a]"
+        param +=  "concat=n=" + count + ":v=1,format=yuv420p[v]"
         comm += "-filter_complex"
-        comm +=   param
+        comm +=  param
         comm += "-map"
         comm += "[v]"
-        //comm += "-c:v"
-        //comm += "-vcodec"
-        //comm += "libx264"
+//        comm += "-map"
+//        comm += "[a]"
+//        comm += "-c:v"
+//        comm += "-vcodec"
+//        comm += "libx264"
 //        comm += "-s"
 //        comm += "640x480"
 //        comm += "-vf"
@@ -230,6 +267,7 @@ class GalleryActivity : AppCompatActivity() {
 
     private fun  getPath(context : Context, uri : Uri) : String{
         var result : String = ""
+        //var proj = arrayOf<String>(MediaStore.Images.Media.DATA)
         var proj = arrayOf<String>(MediaStore.Images.Media.DATA)
         var cursor : Cursor? = context.contentResolver.query( uri, proj, null, null, null )
         if(cursor != null){

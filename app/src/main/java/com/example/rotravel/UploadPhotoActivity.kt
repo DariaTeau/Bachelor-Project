@@ -10,16 +10,14 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.LatLngBounds
-import com.google.android.gms.maps.model.Marker
-import com.google.android.gms.maps.model.MarkerOptions
+import com.google.android.gms.maps.model.*
 
 class UploadPhotoActivity : AppCompatActivity(), OnMapReadyCallback,
     GoogleMap.OnInfoWindowClickListener {
 
     private lateinit var mMap: GoogleMap
     private var photoPos : LatLng = LatLng(0.0, 0.0)
+    private var pins : Array<String> = arrayOf()
     //private lateinit var galleryFragment : GalleryFragment
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -28,6 +26,8 @@ class UploadPhotoActivity : AppCompatActivity(), OnMapReadyCallback,
         val mapFragment = supportFragmentManager
                 .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
+        pins = intent.getSerializableExtra("imgMap") as Array<String>
+        pins += intent.getSerializableExtra("videoMap") as Array<String>
     }
 
     /**
@@ -58,7 +58,9 @@ class UploadPhotoActivity : AppCompatActivity(), OnMapReadyCallback,
         var width : Int = resources.displayMetrics.widthPixels;
         var height : Int = resources.displayMetrics.heightPixels;
         val centerMarker = MarkerOptions().position(romanianBounds.center).title("Choose your picture").draggable(true)
+        centerMarker.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN))
         mMap.addMarker(centerMarker)
+        getPins()
         mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(romanianBounds, width, height, 0))
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(romanianBounds.center, 6.2f))
         mMap.setLatLngBoundsForCameraTarget(cameraBounds)
@@ -86,10 +88,19 @@ class UploadPhotoActivity : AppCompatActivity(), OnMapReadyCallback,
         Log.i("onInfoWindowClick", "am dat click")
 
         val intent = Intent(this, GalleryActivity::class.java).apply {}
-        intent.putExtra("latitude", photoPos.latitude)
-        intent.putExtra("longitude", photoPos.longitude)
+//        intent.putExtra("latitude", photoPos.latitude)
+//        intent.putExtra("longitude", photoPos.longitude)
+        intent.putExtra("latitude", marker.position.latitude)
+        intent.putExtra("longitude", marker.position.longitude)
         startActivity(intent)
     }
 
+    private fun getPins() {
+        for(pin in pins) {
+            val pos = pin.split("&").toTypedArray()
+            val marker = LatLng(pos[0].toDouble(), pos[1].toDouble())
+            mMap.addMarker(MarkerOptions().position(marker).title("Choose your picture"))
+        }
+    }
 
 }
