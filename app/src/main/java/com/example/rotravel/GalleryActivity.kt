@@ -17,6 +17,7 @@ import android.widget.*
 import com.arthenica.mobileffmpeg.Config.RETURN_CODE_CANCEL
 import com.arthenica.mobileffmpeg.Config.RETURN_CODE_SUCCESS
 import com.arthenica.mobileffmpeg.FFmpeg
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 //import com.github.hiteshsondhi88.libffmpeg.ExecuteBinaryResponseHandler
 //import com.github.hiteshsondhi88.libffmpeg.FFmpeg
 //import com.github.hiteshsondhi88.libffmpeg.FFmpegLoadBinaryResponseHandler
@@ -34,8 +35,8 @@ import java.io.File
 import java.util.*
 
 class GalleryActivity : AppCompatActivity() {
-    private lateinit var galleryButton: Button
-    private lateinit var uploadButton : Button
+    private lateinit var galleryButton: FloatingActionButton
+    private lateinit var uploadButton : FloatingActionButton
     private lateinit var uploadedImg : ImageView
     private lateinit var createdVideo : VideoView
     private lateinit var fireStorage : FirebaseStorage
@@ -199,7 +200,8 @@ class GalleryActivity : AppCompatActivity() {
                 comm += "-i"
                 comm += path
                 comm += "-vf"
-                //val partial = "scale=4640:3472,setsar=1,pad=4640:3472:(ow-iw)/2:(oh-ih)/2"
+                //scale=4640:3472,
+                //val partial = "scale=4640:3472:force_original_aspect_ratio=decrease,pad=(ow-iw)/2:(oh-ih)/2"
                 comm += ("transpose=dir=1")
                 comm += "-y"
                 comm += ("/storage/emulated/0/Rotated/output$i.jpeg")

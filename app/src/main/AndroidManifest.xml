@@ -19,7 +19,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.RoTravel">
-        <activity android:name=".ChooseMediaActivity"></activity>
+        <activity android:name=".DisplayVideosActivity"></activity>
+        <activity android:name=".ChooseMediaActivity" />
         <activity android:name=".DisplayImgsActivity" />
         <activity android:name=".RegisterActivity" />
         <activity

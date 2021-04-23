@@ -19,8 +19,8 @@ class ChooseMediaActivity : AppCompatActivity() {
         mediaController.setAnchorView(video)
         video.setMediaController(mediaController)
 
-        val arr = intent.getStringArrayExtra("videos")
-        video.setVideoPath(arr!![1])
+        val arr = intent.getStringExtra("video")
+        video.setVideoPath(arr)
         //Picasso.get().load(Uri.parse(arr!![0])).resize(500, 500).into(video)
         video.requestFocus()
         video.start()

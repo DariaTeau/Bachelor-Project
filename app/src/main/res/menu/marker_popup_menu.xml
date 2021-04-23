@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/itemPhotos"
+        android:title="@string/see_photos" />
+    <item
+        android:id="@+id/itemVideos"
+        android:title="@string/see_videos" />
+    <item
+        android:id="@+id/itemList"
+        android:title="@string/add_to_travel_list" />
+</menu>

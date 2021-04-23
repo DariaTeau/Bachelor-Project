@@ -16,4 +16,9 @@
     <string name="sign_out">Sign Out</string>
     <string name="enter_email">Enter Email</string>
     <string name="enter_password">Enter Password</string>
+    <string name="see_photos">See Photos</string>
+    <string name="see_videos">See Videos</string>
+    <string name="add_to_travel_list">Add to travel list</string>
+    <string name="share_only_with_friends">Share only with friends</string>
+    <string name="upload">Upload</string>
 </resources>

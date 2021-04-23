@@ -4,11 +4,10 @@ import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
-import android.view.Menu
-import android.view.MenuInflater
-import android.view.MenuItem
-import android.view.View
+import android.view.*
 import android.widget.ImageView
+import android.widget.PopupMenu
+import android.widget.Toast
 
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -192,30 +191,50 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnInfoWin
             return contents
         }
 
-//        override fun onInfoWindowClick(marker: Marker) {
-//
-//            val intent = Intent(this@MapActivity, DisplayImgsActivity::class.java).apply {}
-//            //val intent = Intent(this, ChooseMediaActivity::class.java).apply {}
-//            var bundle : Bundle = Bundle()
-//            val key = marker.position.latitude.toString() + "&" + marker.position.longitude.toString()
-//            bundle.putStringArray("videos", videoMap[key])
-//            bundle.putStringArray("photos", imgMap[key])
-//            intent.putExtras(bundle);
-//            startActivity(intent)
-//        }
-
     }
 
     override fun onInfoWindowClick(marker: Marker) {
+        val popup = PopupMenu(this, this.bottomNav, Gravity.CENTER)
+        popup.menuInflater.inflate(R.menu.marker_popup_menu, popup.menu)
+        popup.setOnMenuItemClickListener(PopupMenu.OnMenuItemClickListener { item ->
+            when(item.itemId) {
+                R.id.itemPhotos -> {
+                    Toast.makeText(this, "You Clicked : " + item.title, Toast.LENGTH_SHORT).show()
+                    launchPhotosDisplay(marker) }
+                R.id.itemVideos -> {
+                    Toast.makeText(this, "You Clicked : " + item.title, Toast.LENGTH_SHORT).show()
+                    launchVideosDisplay(marker)
+                }
+                R.id.itemList ->
+                    Toast.makeText(this, "You Clicked : " + item.title, Toast.LENGTH_SHORT).show()
+            }
+            true
+        })
+        popup.show()
+    }
 
+    private fun launchPhotosDisplay(marker : Marker) {
         val intent = Intent(this, DisplayImgsActivity::class.java).apply {}
         //val intent = Intent(this, ChooseMediaActivity::class.java).apply {}
         var bundle : Bundle = Bundle()
         val key = marker.position.latitude.toString() + "&" + marker.position.longitude.toString()
-        bundle.putStringArray("videos", videoMap[key])
+        //bundle.putStringArray("videos", videoMap[key])
         bundle.putStringArray("photos", imgMap[key])
         intent.putExtras(bundle);
         startActivity(intent)
+
+    }
+
+    private fun launchVideosDisplay(marker : Marker) {
+        val intent = Intent(this, DisplayVideosActivity::class.java).apply {}
+        //val intent = Intent(this, ChooseMediaActivity::class.java).apply {}
+        var bundle : Bundle = Bundle()
+        val key = marker.position.latitude.toString() + "&" + marker.position.longitude.toString()
+        bundle.putStringArray("videos", videoMap[key])
+        //bundle.putStringArray("photos", imgMap[key])
+        intent.putExtras(bundle);
+        startActivity(intent)
+
     }
 
     private fun getPins() {

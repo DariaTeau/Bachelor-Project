@@ -6,26 +6,40 @@
     android:layout_height="match_parent"
     tools:context=".GalleryActivity">
 
-    <Button
-        android:id="@+id/btUpload"
-        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-        android:layout_width="213dp"
-        android:layout_height="90dp"
-        android:background="#FFFFFF"
-        android:fontFamily="@font/bubbler_one"
-        android:text="@string/select_from_gallery"
-        android:textColor="#526838"
-        android:textSize="14sp"
-        android:textStyle="bold"
-        app:backgroundTint="#E3F1E4"
-        app:cornerRadius="2dp"
-        app:icon="@android:drawable/ic_menu_gallery"
-        app:iconTint="#82A35B"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.672" />
+<!--    <Button-->
+<!--        android:id="@+id/btUpload"-->
+<!--        android:layout_width="203dp"-->
+<!--        android:layout_height="67dp"-->
+<!--        android:fontFamily="@font/bubbler_one"-->
+<!--        android:text="@string/select_from_gallery"-->
+<!--        android:textColor="#526838"-->
+<!--        android:textSize="18sp"-->
+<!--        android:textStyle="bold"-->
+<!--        app:backgroundTint="#E3F1E4"-->
+<!--        app:icon="@android:drawable/ic_menu_gallery"-->
+<!--        app:iconPadding="10dp"-->
+<!--        app:iconTint="#82A35B"-->
+<!--        app:layout_constraintBottom_toBottomOf="parent"-->
+<!--        app:layout_constraintEnd_toEndOf="parent"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:layout_constraintTop_toTopOf="parent"-->
+<!--        app:layout_constraintVertical_bias="0.621" />-->
+
+    <!--    <Button-->
+<!--        android:id="@+id/btFireUpload"-->
+<!--        android:layout_width="203dp"-->
+<!--        android:layout_height="67dp"-->
+<!--        android:fontFamily="@font/bubbler_one"-->
+<!--        android:text="@string/upload"-->
+<!--        android:textSize="18sp"-->
+<!--        android:textStyle="bold"-->
+<!--        app:icon="@android:drawable/ic_menu_upload"-->
+<!--        app:iconPadding="10dp"-->
+<!--        app:layout_constraintBottom_toBottomOf="parent"-->
+<!--        app:layout_constraintEnd_toEndOf="parent"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:layout_constraintTop_toBottomOf="@+id/btUpload"-->
+<!--        app:layout_constraintVertical_bias="0.57" />-->
 
     <ImageView
         android:id="@+id/ivUploadedImg"
@@ -36,23 +50,8 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.255"
         tools:src="@tools:sample/backgrounds/scenic" />
-
-    <Button
-        android:id="@+id/btFireUpload"
-        android:layout_width="203dp"
-        android:layout_height="67dp"
-        android:fontFamily="@font/bubbler_one"
-        android:text="Uplaod"
-        android:textSize="18sp"
-        android:textStyle="bold"
-        app:icon="@android:drawable/ic_menu_upload"
-        app:iconPadding="10dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/btUpload"
-        app:layout_constraintVertical_bias="0.363" />
 
     <VideoView
         android:id="@+id/video"
@@ -64,5 +63,57 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.126" />
+
+    <androidx.appcompat.widget.SwitchCompat
+        android:id="@+id/swPrivacy"
+        android:layout_width="210dp"
+        android:layout_height="65dp"
+        android:layout_marginBottom="36dp"
+        android:fontFamily="@font/bubbler_one"
+        android:text="@string/share_only_with_friends"
+        android:textColor="#265328"
+        android:textColorLink="#4FDC55"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.407"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/btUpload"
+        app:layout_constraintVertical_bias="0.645" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/btFireUpload"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:backgroundTint="#689337"
+        android:clickable="true"
+        android:contentDescription="@string/uplod_photo_string"
+        android:focusable="true"
+        android:textAlignment="center"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.761"
+        app:layout_constraintStart_toEndOf="@+id/swPrivacy"
+        app:layout_constraintTop_toBottomOf="@+id/btUpload"
+        app:layout_constraintVertical_bias="0.253"
+        app:srcCompat="@android:drawable/ic_menu_upload" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/btUpload"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:clickable="true"
+        android:contentDescription="Select from gallery"
+        app:backgroundTint="#E3F1E4"
+        app:iconTint="#7F9F5A"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.957"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/video"
+        app:layout_constraintVertical_bias="0.567"
+        app:srcCompat="@android:drawable/ic_menu_gallery" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>
