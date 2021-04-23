@@ -3,6 +3,11 @@
     xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:id="@+id/it_signOut"
-        android:title="@string/sign_out"/>
+        android:icon="@drawable/ic_profile"
+        android:title="@string/sign_out" />
+    <item
+        android:id="@+id/itDestList"
+        android:icon="@android:drawable/ic_menu_mapmode"
+        android:title="Saved Destinations" />
 
 </menu>

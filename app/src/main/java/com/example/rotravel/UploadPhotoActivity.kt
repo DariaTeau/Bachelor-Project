@@ -4,13 +4,13 @@ import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
-import android.view.View
 
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
+import com.google.android.material.bottomnavigation.BottomNavigationView
 
 class UploadPhotoActivity : AppCompatActivity(), OnMapReadyCallback,
     GoogleMap.OnInfoWindowClickListener {
@@ -18,16 +18,43 @@ class UploadPhotoActivity : AppCompatActivity(), OnMapReadyCallback,
     private lateinit var mMap: GoogleMap
     private var photoPos : LatLng = LatLng(0.0, 0.0)
     private var pins : Array<String> = arrayOf()
-    //private lateinit var galleryFragment : GalleryFragment
+    private lateinit var bottomNav : BottomNavigationView
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_upload_photo)
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         val mapFragment = supportFragmentManager
-                .findFragmentById(R.id.map) as SupportMapFragment
+                .findFragmentById(R.id.uploadMap) as SupportMapFragment
         mapFragment.getMapAsync(this)
         pins = intent.getSerializableExtra("imgMap") as Array<String>
         pins += intent.getSerializableExtra("videoMap") as Array<String>
+
+        bottomNav = findViewById(R.id.navButton)
+        //bottomNav.inflateMenu(R.menu.main_map_options)
+        bottomNav.selectedItemId = R.id.uploadItem
+        bottomNav.setOnNavigationItemSelectedListener {
+            when (it.itemId) {
+                R.id.profileItem -> {
+                    val intent = Intent(this, UserProfileActivity::class.java).apply {}
+                    intent.putExtra("imgMap", this.intent.getSerializableExtra("userImgMap"))
+                    intent.putExtra("videoMap", this.intent.getSerializableExtra("userVideoMap"))
+                    intent.putExtra("imgAll", this.intent.getSerializableExtra("imgMap"))
+                    intent.putExtra("videoAll", this.intent.getSerializableExtra("videoMap"))
+                    startActivity(intent)
+                    true
+                }
+                R.id.mapItem -> {
+                    //Log.i("onOptionsItemSelected", "am selectat profilul")
+                    val intent = Intent(this, MapActivity::class.java).apply {}
+                    startActivity(intent)
+                    true
+                }
+                else -> true
+
+            }
+        }
+
+
     }
 
     /**

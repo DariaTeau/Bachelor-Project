@@ -13,12 +13,12 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/map"
+        app:layout_constraintTop_toBottomOf="@+id/uploadMap"
         app:layout_constraintVertical_bias="1.0"
         app:menu="@menu/main_map_options" />
 
     <fragment
-        android:id="@+id/map"
+        android:id="@+id/uploadMap"
 
         android:name="com.google.android.gms.maps.SupportMapFragment"
         android:layout_width="409dp"
@@ -29,6 +29,20 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.0" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/btSearch"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:clickable="true"
+        app:backgroundTint="#CDDC39"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.954"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/uploadMap"
+        app:layout_constraintVertical_bias="0.028"
+        app:srcCompat="@android:drawable/ic_menu_search" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
