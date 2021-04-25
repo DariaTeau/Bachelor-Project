@@ -37,7 +37,7 @@ import java.util.*
 class GalleryActivity : AppCompatActivity() {
     private lateinit var galleryButton: FloatingActionButton
     private lateinit var uploadButton : FloatingActionButton
-    private lateinit var privacySwitch : Switch
+    private lateinit var privacySwitch : androidx.appcompat.widget.SwitchCompat
     private var onlyFriends = false
     private lateinit var uploadedImg : ImageView
     private lateinit var createdVideo : VideoView
