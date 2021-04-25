@@ -127,6 +127,11 @@ class UserProfileActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.O
                 }
                 true
             }
+            R.id.itDestList -> {
+                val intent = Intent(this, DestinationListActivity::class.java).apply {}
+                startActivity(intent)
+                true
+            }
             else -> super.onOptionsItemSelected(item)
         }
     }
@@ -137,22 +142,6 @@ class UserProfileActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.O
     }
 
     private fun getUserPins() {
-//        fireDB.child("Photos").child(fireAuth.uid!!).get().addOnSuccessListener {
-//            for(ds in it.children) {
-//                var lat = ds.child("lat")
-//                var lon = ds.child("lon")
-//                Log.i("getFromDB", lat.value.toString() + " " + lon.value.toString())
-//                var marker = LatLng(lat.value.toString().toDouble(), lon.value.toString().toDouble())
-//                val url = ds.child("url").value.toString()
-//                if(url.contains("mp4")) {
-//                    videosUrls += url
-//                } else {
-//                    photosUrls += url
-//                }
-//                mMap.addMarker(MarkerOptions().position(marker).title("marker").title("Photos"))
-//            }
-//
-//        }
         for(key in photosUrls.keys) {
             val pos = key.split("&").toTypedArray()
             val marker = LatLng(pos[0].toDouble(), pos[1].toDouble())

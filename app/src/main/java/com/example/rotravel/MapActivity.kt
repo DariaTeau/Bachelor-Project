@@ -1,14 +1,14 @@
 package com.example.rotravel
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.transition.TransitionManager
 import android.util.Log
 import android.view.*
-import android.widget.ImageView
-import android.widget.PopupMenu
-import android.widget.Toast
+import android.widget.*
 
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -27,6 +27,9 @@ import com.google.firebase.auth.ktx.auth
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.FirebaseStorage
+import java.util.*
+import kotlin.collections.HashMap
 
 class MapActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnInfoWindowClickListener {
 
@@ -41,6 +44,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnInfoWin
     private var userVideoMap : HashMap<String, Array<String>> = HashMap()
 
     private val AUTOCOMPLETE_REQUEST_CODE = 1
+    private var destDescr : String = "default text"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -166,12 +170,32 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnInfoWin
                     Toast.makeText(this, "You Clicked : " + item.title, Toast.LENGTH_SHORT).show()
                     launchVideosDisplay(marker)
                 }
-                R.id.itemList ->
+                R.id.itemList -> {
+                    //popup.dismiss()
+                    createPopup(marker)
                     Toast.makeText(this, "You Clicked : " + item.title, Toast.LENGTH_SHORT).show()
+                }
             }
             true
         })
         popup.show()
+    }
+
+    private fun createPopup(marker: Marker) {
+        var popupWindow = PopupWindow(this)
+        val view = layoutInflater.inflate(R.layout.descr_popup_window, null)
+        popupWindow.contentView = view
+        //TransitionManager.beginDelayedTransition(findViewById(R.layout.activity_map))
+        var descr : EditText = view.findViewById(R.id.etDestName)
+        var done : Button = view.findViewById(R.id.btDone)
+        done.setOnClickListener {
+            destDescr = descr.text.toString()
+            addToDestList(marker)
+            popupWindow.dismiss()}
+        popupWindow.showAtLocation(this.bottomNav, Gravity.CENTER, 0, 20)
+        popupWindow.setFocusable(true)
+        popupWindow.update()
+
     }
 
     private fun launchPhotosDisplay(marker : Marker) {
@@ -293,6 +317,15 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnInfoWin
             return
         }
         super.onActivityResult(requestCode, resultCode, data)
+    }
+
+    private fun addToDestList(marker: Marker) {
+        //val newEntryRef =
+            //fireDB.child("Users").child(fireAuth.currentUser.uid).child("FutureDest").push()
+        //val dest = newEntryRef.child(destDescr).push()
+        fireDB.child("Users").child(fireAuth.currentUser.uid).child("FutureDest")
+            .child(destDescr).setValue(marker.position.latitude.toString() + ";" + marker.position.longitude.toString())
+        //dest.setValue(marker.position.latitude.toString() + ";" + marker.position.longitude.toString())
     }
 
 }
