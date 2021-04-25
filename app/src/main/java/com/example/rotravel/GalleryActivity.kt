@@ -37,6 +37,8 @@ import java.util.*
 class GalleryActivity : AppCompatActivity() {
     private lateinit var galleryButton: FloatingActionButton
     private lateinit var uploadButton : FloatingActionButton
+    private lateinit var privacySwitch : androidx.appcompat.widget.SwitchCompat
+    private var onlyFriends = false
     private lateinit var uploadedImg : ImageView
     private lateinit var createdVideo : VideoView
     private lateinit var fireStorage : FirebaseStorage
@@ -55,6 +57,7 @@ class GalleryActivity : AppCompatActivity() {
         uploadedImg = findViewById(R.id.ivUploadedImg)
         createdVideo = findViewById(R.id.video)
         uploadButton = findViewById(R.id.btFireUpload)
+        privacySwitch = findViewById(R.id.swPrivacy)
         fireAuth = Firebase.auth
         fireDB = Firebase.database("https://rotravel-14ed2-default-rtdb.europe-west1.firebasedatabase.app/").reference
 
@@ -67,17 +70,26 @@ class GalleryActivity : AppCompatActivity() {
         }
 
         uploadButton.setOnClickListener { uploadToFirebase() }
+
     }
 
     private fun uploadToFirebase() {
         fireStorage = Firebase.storage("gs://rotravel-14ed2.appspot.com")
         val newEntryRef = fireDB.child("Photos").child(fireAuth.currentUser.uid).push()
         var time = Calendar.getInstance().time.toString()
-        var path = ""
-        if (imgUri != null) {
-            path = "photos/" + fireAuth.currentUser.uid + "/" + time + ".jpg"
+        var path = "photos/" + fireAuth.currentUser.uid + "/"
+        if(privacySwitch.isChecked) {
+            path += "friends/"
         } else {
-            path = "photos/" + fireAuth.currentUser.uid + "/" + time + ".mp4"
+            //TODO: modify to use public/ folder
+            //path += "public/"
+        }
+        if (imgUri != null) {
+            //path = "photos/" + fireAuth.currentUser.uid + "/" + time + ".jpg"
+            path += "$time.jpg"
+        } else {
+            //path = "photos/" + fireAuth.currentUser.uid + "/" + time + ".mp4"
+            path += "$time.mp4"
         }
 
         val photoRef = fireStorage.reference.child(path)

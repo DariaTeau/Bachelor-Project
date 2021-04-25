@@ -1,57 +1,63 @@
 package com.example.rotravel
 
+import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.transition.TransitionManager
 import android.util.Log
 import android.view.*
-import android.widget.ImageView
-import android.widget.PopupMenu
-import android.widget.Toast
+import android.widget.*
 
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.LatLngBounds
-import com.google.android.gms.maps.model.Marker
-import com.google.android.gms.maps.model.MarkerOptions
-import com.google.android.gms.tasks.Task
-import com.google.android.material.bottomnavigation.BottomNavigationMenu
+import com.google.android.gms.maps.model.*
+import com.google.android.libraries.places.api.Places
+import com.google.android.libraries.places.api.model.Place
+import com.google.android.libraries.places.api.net.PlacesClient
+import com.google.android.libraries.places.widget.Autocomplete
+import com.google.android.libraries.places.widget.AutocompleteActivity
+import com.google.android.libraries.places.widget.model.AutocompleteActivityMode
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
-import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.async
-import kotlinx.coroutines.runBlocking
+import com.google.firebase.storage.FirebaseStorage
+import java.util.*
+import kotlin.collections.HashMap
 
 class MapActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnInfoWindowClickListener {
 
     private lateinit var mMap: GoogleMap
     private lateinit var bottomNav : BottomNavigationView
+    private lateinit var searchBt : FloatingActionButton
     private lateinit var fireDB : DatabaseReference
     private lateinit var fireAuth : FirebaseAuth
+    private lateinit var placesClient : PlacesClient
     private var imgMap : HashMap<String, Array<String>> = HashMap()
     private var videoMap : HashMap<String, Array<String>> = HashMap()
     private var userImgMap : HashMap<String, Array<String>> = HashMap()
     private var userVideoMap : HashMap<String, Array<String>> = HashMap()
+
+    private val AUTOCOMPLETE_REQUEST_CODE = 1
+    private var destDescr : String = "default text"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_map)
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         val mapFragment = supportFragmentManager
-                .findFragmentById(R.id.map) as SupportMapFragment
+                .findFragmentById(R.id.uploadMap) as SupportMapFragment
         mapFragment.getMapAsync(this)
         //mapFragment.setHasOptionsMenu(true)
+        Places.initialize(this, "AIzaSyBKM7rITzpe9u2-kEu5lt_ePs4zpg4UChg")
+        placesClient = Places.createClient(this)
         fireAuth = Firebase.auth
         fireDB = Firebase.database("https://rotravel-14ed2-default-rtdb.europe-west1.firebasedatabase.app/").reference
         //def = GlobalScope.async { getPins() }
@@ -65,6 +71,8 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnInfoWin
                     val intent = Intent(this, UploadPhotoActivity::class.java).apply {}
                     intent.putExtra("imgMap", imgMap.keys.toTypedArray())
                     intent.putExtra("videoMap", videoMap.keys.toTypedArray())
+                    intent.putExtra("userImgMap", userImgMap)
+                    intent.putExtra("userVideoMap", userVideoMap)
                     startActivity(intent)
                     true
                 }
@@ -73,6 +81,8 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnInfoWin
                     val intent = Intent(this, UserProfileActivity::class.java).apply {}
                     intent.putExtra("imgMap", userImgMap)
                     intent.putExtra("videoMap", userVideoMap)
+                    intent.putExtra("imgAll", imgMap.keys.toTypedArray())
+                    intent.putExtra("videoAll", videoMap.keys.toTypedArray())
                     startActivity(intent)
                     true
             }
@@ -81,56 +91,14 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnInfoWin
             }
         }
 
+        searchBt = findViewById(R.id.btSearch)
+        searchBt.setOnClickListener { autoCompleteIntent() }
+
 //        val postListener = object : ValueEventListener {
 //            override fun onDataChange(dataSnapshot: DataSnapshot) {
 //                // Get Post object and use the values to update the UI
 //                //val post = dataSnapshot.getValue<Post>()
 //                // ...
-//                for(snap in dataSnapshot.children) {
-//                    for(ds in snap.children) {
-//                        var lat = ds.child("lat")
-//                        var lon = ds.child("lon")
-//                        Log.i("getFromDB", lat.value.toString() + " " + lon.value.toString())
-//                        var marker = LatLng(lat.value.toString().toDouble(), lon.value.toString().toDouble())
-//                        val url = ds.child("url").value.toString()
-//                        val key = lat.value.toString() + "&" + lon.value.toString()
-//                        if(url.contains("mp4")) {
-//                            var vidArr = videoMap[key]
-//                            if(vidArr != null) {
-//                                vidArr += url
-//                            } else {
-//                                videoMap[key] = arrayOf(url)
-//                            }
-//                        } else {
-//                            var imgArr = imgMap[key]
-//                            if(imgArr != null) {
-//                                imgArr += url
-//                            } else {
-//                                imgMap[key] = arrayOf(url)
-//                            }
-//                        }
-//
-//                        mMap.addMarker(MarkerOptions().position(marker).title("marker").title("Photos"))
-//
-//                        if(snap.key!! == fireAuth.uid) {
-//                            if (url.contains("mp4")) {
-//                                var arr = userVideoMap.get(key)
-//                                if (arr != null) {
-//                                    userVideoMap.get(key)?.plus(url)
-//                                } else {
-//                                    userVideoMap[key] = arrayOf(url)
-//                                }
-//                            } else {
-//                                var arr = userImgMap.get(key)
-//                                if (arr != null) {
-//                                    userImgMap.get(key)?.plus(url)
-//                                } else {
-//                                    userImgMap[key] = arrayOf(url)
-//                                }
-//                            }
-//                        }
-//                    }
-//                }
 //            }
 //
 //            override fun onCancelled(databaseError: DatabaseError) {
@@ -174,7 +142,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnInfoWin
         var height : Int = resources.displayMetrics.heightPixels;
         var padding : Int = (width * 0.12).toInt();
         //mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(romanianBounds.center, 6.2f))
-        mMap.setLatLngBoundsForCameraTarget(cameraBounds)
+        //mMap.setLatLngBoundsForCameraTarget(cameraBounds)
         mMap.setInfoWindowAdapter(CustomInfoWindowAdapter())
         googleMap.setOnInfoWindowClickListener(this)
         mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(romanianBounds, width, height, 0))
@@ -199,18 +167,38 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnInfoWin
         popup.setOnMenuItemClickListener(PopupMenu.OnMenuItemClickListener { item ->
             when(item.itemId) {
                 R.id.itemPhotos -> {
-                    Toast.makeText(this, "You Clicked : " + item.title, Toast.LENGTH_SHORT).show()
+                    //Toast.makeText(this, "You Clicked : " + item.title, Toast.LENGTH_SHORT).show()
                     launchPhotosDisplay(marker) }
                 R.id.itemVideos -> {
-                    Toast.makeText(this, "You Clicked : " + item.title, Toast.LENGTH_SHORT).show()
+                    //Toast.makeText(this, "You Clicked : " + item.title, Toast.LENGTH_SHORT).show()
                     launchVideosDisplay(marker)
                 }
-                R.id.itemList ->
-                    Toast.makeText(this, "You Clicked : " + item.title, Toast.LENGTH_SHORT).show()
+                R.id.itemList -> {
+                    //popup.dismiss()
+                    createPopup(marker)
+                    //Toast.makeText(this, "You Clicked : " + item.title, Toast.LENGTH_SHORT).show()
+                }
             }
             true
         })
         popup.show()
+    }
+
+    private fun createPopup(marker: Marker) {
+        var popupWindow = PopupWindow(this)
+        val view = layoutInflater.inflate(R.layout.descr_popup_window, null)
+        popupWindow.contentView = view
+        //TransitionManager.beginDelayedTransition(findViewById(R.layout.activity_map))
+        var descr : EditText = view.findViewById(R.id.etDestName)
+        var done : Button = view.findViewById(R.id.btDone)
+        done.setOnClickListener {
+            destDescr = descr.text.toString()
+            addToDestList(marker)
+            popupWindow.dismiss()}
+        popupWindow.showAtLocation(this.bottomNav, Gravity.CENTER, 0, 20)
+        popupWindow.setFocusable(true)
+        popupWindow.update()
+
     }
 
     private fun launchPhotosDisplay(marker : Marker) {
@@ -286,6 +274,59 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnInfoWin
             }
 
         }
+    }
+
+    private fun autoCompleteIntent() {
+
+        // Set the fields to specify which types of place data to
+        // return after the user has made a selection.
+        val fields = listOf(Place.Field.ID, Place.Field.NAME, Place.Field.LAT_LNG)
+
+        // Start the autocomplete intent.
+        val intent = Autocomplete.IntentBuilder(AutocompleteActivityMode.OVERLAY, fields)
+                .build(this)
+        startActivityForResult(intent, AUTOCOMPLETE_REQUEST_CODE)
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (requestCode == AUTOCOMPLETE_REQUEST_CODE) {
+            when (resultCode) {
+                Activity.RESULT_OK -> {
+                    data?.let {
+                        val place = Autocomplete.getPlaceFromIntent(data)
+                        Log.i("onActivityResult", "Place: ${place.name}, ${place.id}")
+                        //mMap.addMarker(MarkerOptions().position(place.latLng!!).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE)))
+                        //centerMarker.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN))
+                        val key = place.latLng?.latitude.toString() + "&" + place.latLng?.longitude.toString()
+                        if(videoMap[key] != null || imgMap[key] != null) {
+                            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(place.latLng, 10.0f));
+                        } else {
+                            mMap.addMarker(MarkerOptions().position(place.latLng!!).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE)))
+                            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(place.latLng, 10.0f));
+                        }
+                    }
+                }
+                AutocompleteActivity.RESULT_ERROR -> {
+                    // TODO: Handle the error.
+                    data?.let {
+                        val status = Autocomplete.getStatusFromIntent(data)
+                        Log.i("onActivityResult", status.statusMessage!!)
+                    }
+                }
+                Activity.RESULT_CANCELED -> {
+                    // The user canceled the operation.
+                }
+            }
+            return
+        }
+        super.onActivityResult(requestCode, resultCode, data)
+    }
+
+    private fun addToDestList(marker: Marker) {
+        fireDB.child("Users").child(fireAuth.currentUser.uid).child("FutureDest")
+            .child(destDescr).setValue(marker.position.latitude.toString() + ";" + marker.position.longitude.toString())
+
+        Toast.makeText(this, "Destination added to your travel list", Toast.LENGTH_LONG).show()
     }
 
 }
