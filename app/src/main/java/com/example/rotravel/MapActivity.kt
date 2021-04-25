@@ -17,6 +17,7 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
 import com.google.android.libraries.places.api.Places
 import com.google.android.libraries.places.api.model.Place
+import com.google.android.libraries.places.api.net.PlacesClient
 import com.google.android.libraries.places.widget.Autocomplete
 import com.google.android.libraries.places.widget.AutocompleteActivity
 import com.google.android.libraries.places.widget.model.AutocompleteActivityMode
@@ -38,6 +39,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnInfoWin
     private lateinit var searchBt : FloatingActionButton
     private lateinit var fireDB : DatabaseReference
     private lateinit var fireAuth : FirebaseAuth
+    private lateinit var placesClient : PlacesClient
     private var imgMap : HashMap<String, Array<String>> = HashMap()
     private var videoMap : HashMap<String, Array<String>> = HashMap()
     private var userImgMap : HashMap<String, Array<String>> = HashMap()
@@ -55,6 +57,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnInfoWin
         mapFragment.getMapAsync(this)
         //mapFragment.setHasOptionsMenu(true)
         Places.initialize(this, "AIzaSyBKM7rITzpe9u2-kEu5lt_ePs4zpg4UChg")
+        placesClient = Places.createClient(this)
         fireAuth = Firebase.auth
         fireDB = Firebase.database("https://rotravel-14ed2-default-rtdb.europe-west1.firebasedatabase.app/").reference
         //def = GlobalScope.async { getPins() }
@@ -139,7 +142,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnInfoWin
         var height : Int = resources.displayMetrics.heightPixels;
         var padding : Int = (width * 0.12).toInt();
         //mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(romanianBounds.center, 6.2f))
-        mMap.setLatLngBoundsForCameraTarget(cameraBounds)
+        //mMap.setLatLngBoundsForCameraTarget(cameraBounds)
         mMap.setInfoWindowAdapter(CustomInfoWindowAdapter())
         googleMap.setOnInfoWindowClickListener(this)
         mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(romanianBounds, width, height, 0))
@@ -164,16 +167,16 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnInfoWin
         popup.setOnMenuItemClickListener(PopupMenu.OnMenuItemClickListener { item ->
             when(item.itemId) {
                 R.id.itemPhotos -> {
-                    Toast.makeText(this, "You Clicked : " + item.title, Toast.LENGTH_SHORT).show()
+                    //Toast.makeText(this, "You Clicked : " + item.title, Toast.LENGTH_SHORT).show()
                     launchPhotosDisplay(marker) }
                 R.id.itemVideos -> {
-                    Toast.makeText(this, "You Clicked : " + item.title, Toast.LENGTH_SHORT).show()
+                    //Toast.makeText(this, "You Clicked : " + item.title, Toast.LENGTH_SHORT).show()
                     launchVideosDisplay(marker)
                 }
                 R.id.itemList -> {
                     //popup.dismiss()
                     createPopup(marker)
-                    Toast.makeText(this, "You Clicked : " + item.title, Toast.LENGTH_SHORT).show()
+                    //Toast.makeText(this, "You Clicked : " + item.title, Toast.LENGTH_SHORT).show()
                 }
             }
             true
@@ -277,7 +280,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnInfoWin
 
         // Set the fields to specify which types of place data to
         // return after the user has made a selection.
-        val fields = listOf(Place.Field.ID, Place.Field.NAME)
+        val fields = listOf(Place.Field.ID, Place.Field.NAME, Place.Field.LAT_LNG)
 
         // Start the autocomplete intent.
         val intent = Autocomplete.IntentBuilder(AutocompleteActivityMode.OVERLAY, fields)
@@ -296,10 +299,10 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnInfoWin
                         //centerMarker.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN))
                         val key = place.latLng?.latitude.toString() + "&" + place.latLng?.longitude.toString()
                         if(videoMap[key] != null || imgMap[key] != null) {
-                            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(place.latLng, 18.0f));
+                            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(place.latLng, 10.0f));
                         } else {
                             mMap.addMarker(MarkerOptions().position(place.latLng!!).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE)))
-                            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(place.latLng, 18.0f));
+                            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(place.latLng, 10.0f));
                         }
                     }
                 }
@@ -320,12 +323,10 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnInfoWin
     }
 
     private fun addToDestList(marker: Marker) {
-        //val newEntryRef =
-            //fireDB.child("Users").child(fireAuth.currentUser.uid).child("FutureDest").push()
-        //val dest = newEntryRef.child(destDescr).push()
         fireDB.child("Users").child(fireAuth.currentUser.uid).child("FutureDest")
             .child(destDescr).setValue(marker.position.latitude.toString() + ";" + marker.position.longitude.toString())
-        //dest.setValue(marker.position.latitude.toString() + ";" + marker.position.longitude.toString())
+
+        Toast.makeText(this, "Destination added to your travel list", Toast.LENGTH_LONG).show()
     }
 
 }

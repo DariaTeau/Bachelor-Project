@@ -36,7 +36,7 @@ class DestinationListActivity : AppCompatActivity(), OnMapReadyCallback {
         fireDB = Firebase.database("https://rotravel-14ed2-default-rtdb.europe-west1.firebasedatabase.app/").reference
         getDestinations()
     }
-    
+
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
         val romanianBounds = LatLngBounds(
