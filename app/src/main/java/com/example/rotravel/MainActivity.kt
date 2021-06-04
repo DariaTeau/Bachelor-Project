@@ -1,11 +1,15 @@
 package com.example.rotravel
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
+import androidx.core.content.ContextCompat
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
@@ -15,6 +19,11 @@ import com.google.android.gms.tasks.Task
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
     private lateinit var user : EditText
@@ -24,6 +33,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var googleLoginButton : SignInButton
     private lateinit var fireAuth: FirebaseAuth
     lateinit var mGoogleSignInClient : GoogleSignInClient
+    lateinit var requestPermissionLauncher : ActivityResultLauncher<String>
 
 
     private var usersMap : HashMap<String, String> = HashMap()
@@ -43,6 +53,18 @@ class MainActivity : AppCompatActivity() {
 
         loginButton.setOnClickListener{ login() }
         registerButton.setOnClickListener { register() }
+        requestPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission())
+        { isGranted: Boolean ->
+            if (isGranted) {
+                Toast.makeText(this, "Perm Granted", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(this, "Perm NOT Granted", Toast.LENGTH_SHORT).show()
+            }
+        }
+        checkPerm()
+        GlobalScope.launch(Dispatchers.IO) {
+            Log.i("MainActivity", "launch -> ${Thread.currentThread().name}")
+            NearbyCommunication.doInit(this@MainActivity) }
 
 
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -65,6 +87,36 @@ class MainActivity : AppCompatActivity() {
         fireAuth = Firebase.auth
         if(fireAuth.currentUser != null) {
             goToMapActivity()
+        }
+
+    }
+
+    private fun checkPerm() {
+        var isGranted = ContextCompat.checkSelfPermission(this,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        )
+        if(isGranted == PackageManager.PERMISSION_DENIED) {
+            requestPermissionLauncher.launch(
+                Manifest.permission.ACCESS_FINE_LOCATION)
+        }
+
+        isGranted = ContextCompat.checkSelfPermission(this,
+            Manifest.permission.READ_EXTERNAL_STORAGE
+        )
+        if(isGranted == PackageManager.PERMISSION_DENIED) {
+            requestPermissionLauncher.launch(
+                Manifest.permission.READ_EXTERNAL_STORAGE)
+        }
+
+        isGranted = ContextCompat.checkSelfPermission(this,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE
+        )
+        if(isGranted == PackageManager.PERMISSION_DENIED) {
+            requestPermissionLauncher.launch(
+                Manifest.permission.WRITE_EXTERNAL_STORAGE)
+        } else {
+            Log.i("checkperm", "pot sa scriu")
+
         }
 
     }

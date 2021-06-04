@@ -10,6 +10,7 @@ import android.net.Uri
 import android.opengl.Visibility
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.ParcelFileDescriptor
 import android.provider.MediaStore
 import android.util.Log
 import android.view.View
@@ -17,6 +18,7 @@ import android.widget.*
 import com.arthenica.mobileffmpeg.Config.RETURN_CODE_CANCEL
 import com.arthenica.mobileffmpeg.Config.RETURN_CODE_SUCCESS
 import com.arthenica.mobileffmpeg.FFmpeg
+import com.google.android.gms.nearby.connection.Payload
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 //import com.github.hiteshsondhi88.libffmpeg.ExecuteBinaryResponseHandler
 //import com.github.hiteshsondhi88.libffmpeg.FFmpeg
@@ -30,6 +32,9 @@ import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.UploadTask
 import com.google.firebase.storage.ktx.storage
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.util.*
@@ -45,14 +50,18 @@ class GalleryActivity : AppCompatActivity() {
     private lateinit var fireAuth : FirebaseAuth
     private lateinit var fireDB : DatabaseReference
     private var videoImgs : Array<Uri> = arrayOf<Uri>()
+    private var sendImgs : Array<Uri> = arrayOf<Uri>()
     private var paths : Array<String> = arrayOf<String>()
     private val imgReqCode = 100
     private var imgUri : Uri? = null
     private val TAG = "executing ffmpeg command"
+    private var begin : Long = 0
+    private var end : Long = 0
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        //NearbyCommunication.doInit(this)
         setContentView(R.layout.activity_gallery)
-
+        title = "Upload your photos"
         galleryButton = findViewById(R.id.btUpload)
         uploadedImg = findViewById(R.id.ivUploadedImg)
         createdVideo = findViewById(R.id.video)
@@ -136,6 +145,7 @@ class GalleryActivity : AppCompatActivity() {
 
             // if multiple images are selected
             if (data != null && data.clipData != null) {
+                begin = Date().time
                 var count = data.clipData!!.itemCount
                 if(count == 1) {
                     createdVideo.visibility = View.INVISIBLE
@@ -144,13 +154,37 @@ class GalleryActivity : AppCompatActivity() {
                     return;
                 }
                 createdVideo.visibility = View.VISIBLE
-                for (i in 0..count - 1) {
+                for(i in 0..(count/2)) {
+                    val item = data.clipData?.getItemAt(i)
+                    if(item != null) {
+                        sendImgs += item.uri
+                    }
+                }
+                GlobalScope.launch(Dispatchers.IO) {
+                    Log.i("GalleryActivity", "launch -> ${Thread.currentThread().name}")
+                    NearbyCommunication.mutex.lock()
+                    createAndSendPayload()}
+                for (i in (count/2)+1..count - 1) {
                     val item = data.clipData?.getItemAt(i)
                     if(item != null) {
                         videoImgs += item.uri
                     }
                 }
-                initFfmpeg()
+                GlobalScope.launch(Dispatchers.Default) {
+                    Log.i("GalleryActivity", "launch -> ${Thread.currentThread().name}")
+                    initFfmpeg(false)}
+
+//                for (i in 0..count - 1) {
+//                    val item = data.clipData?.getItemAt(i)
+//                    if(item != null) {
+//                        videoImgs += item.uri
+//                    }
+//                }
+//                GlobalScope.launch(Dispatchers.Default) {
+//                    Log.i("GalleryActivity", "launch -> ${Thread.currentThread().name}")
+//                    initFfmpeg(true)}
+
+
 
             } else if (data != null && data.data != null) {
                 // if single image is selected
@@ -172,15 +206,23 @@ class GalleryActivity : AppCompatActivity() {
 
 
 
-    private fun initFfmpeg() {
+    private suspend fun initFfmpeg(single : Boolean) {
         transpose()
         val command = createCommand()
         var rc = FFmpeg.execute(command)
         if (rc == RETURN_CODE_SUCCESS) {
             Log.i(TAG, "Command execution completed successfully.")
-            createdVideo.setVideoPath("/storage/emulated/0/Videos/output.mp4")
-            createdVideo.requestFocus()
-            createdVideo.start()
+            if(single) {
+                GlobalScope.launch(Dispatchers.Main) {
+                    createdVideo.setVideoPath("/storage/emulated/0/Videos/output.mp4")
+                    createdVideo.requestFocus()
+                    createdVideo.start()
+                    end = Date().time
+                    Log.i("TimeTook", (end - begin).toString())
+                }
+            } else {
+                concatVideos()
+            }
         } else if (rc == RETURN_CODE_CANCEL) {
             Log.i(TAG, "Command execution cancelled by user.");
         } else {
@@ -188,6 +230,27 @@ class GalleryActivity : AppCompatActivity() {
             //Config.printLastCommandOutput(Log.INFO);
         }
 
+    }
+
+    private suspend fun concatVideos() {
+        val command = concatVideosCommand()
+        var rc = FFmpeg.execute(command)
+        if (rc == RETURN_CODE_SUCCESS) {
+            Log.i(TAG, "Command execution completed successfully.")
+            GlobalScope.launch(Dispatchers.Main) {
+                createdVideo.setVideoPath("/storage/emulated/0/Videos/final_output.mp4")
+                createdVideo.requestFocus()
+                createdVideo.start()
+                end = Date().time
+                Log.i("TimeTook", (end - begin).toString())
+            }
+
+        } else if (rc == RETURN_CODE_CANCEL) {
+            Log.i(TAG, "Command execution cancelled by user.");
+        } else {
+            Log.i(TAG, String.format("Command execution failed with rc=%d and the output below.", rc));
+            //Config.printLastCommandOutput(Log.INFO);
+        }
     }
 
     private fun getOrientation(pathToImage : String) : String? {
@@ -254,25 +317,12 @@ class GalleryActivity : AppCompatActivity() {
             else
                 Log.e("FILE", "DIDNT MAKE IT!!")
         }
-        //val partial = "[0:v] scale=iw*min(1920/iw\\\\,1080/ih):ih*min(1920/iw\\\\,1080/ih), pad=1920:1080:(1920-iw*min(1920/iw\\\\,1080/ih))/2:(1080-ih*min(1920/iw\\\\,1080/ih))/2,setsar=1:1[v0];[v0][0:a] "
-        //:force_original_aspect_ratio=decrease
-        //[1:v]scale=4640:3472,setsar=1,pad=4640:3472:(ow-iw)/2:(oh-ih)/2[1v];
-        //[1v][1:a]
-        //val partial = "[0:v]scale=4640:3472,setsar=1,pad=4640:3472:(ow-iw)/2:(oh-ih)/2[0v];[0v][0:a]"
+
         param +=  "concat=n=" + count + ":v=1,format=yuv420p[v]"
         comm += "-filter_complex"
         comm +=  param
         comm += "-map"
         comm += "[v]"
-//        comm += "-map"
-//        comm += "[a]"
-//        comm += "-c:v"
-//        comm += "-vcodec"
-//        comm += "libx264"
-//        comm += "-s"
-//        comm += "640x480"
-//        comm += "-vf"
-//        comm += "transpose=dir=1:passthrough=landscape"
         comm += "-y"
         //comm += test.absolutePath
         comm += "/storage/emulated/0/Videos/output.mp4"
@@ -294,8 +344,50 @@ class GalleryActivity : AppCompatActivity() {
         if(result.isEmpty()) {
             result = "Not found";
         }
-        //Runtime.getRuntime().exec("chmod 0777 "+result).waitFor();
         return result
+    }
+
+    private fun createAndSendPayload() {
+        //selectMultiple()
+        Log.i("createAndSendPayload", "am intrat")
+        var send = arrayOf<Payload>()
+        for (element in sendImgs) {
+            var pfd : ParcelFileDescriptor? = contentResolver.openFileDescriptor(element, "r");
+            var filePayload = Payload.fromFile(pfd!!)
+            send += filePayload
+
+        }
+        NearbyCommunication.doDiscover(send)
+        Log.i("createAndSendPayload", "am iesit")
+
+    }
+
+    private suspend fun concatVideosCommand() : Array<String> {
+        var test : File = File("/storage/emulated/0/Videos");
+        if (!test.exists()) {
+            if (test.mkdirs())
+                Log.e("FILE", "MADE IT!!")
+            else
+                Log.e("FILE", "DIDNT MAKE IT!!")
+        }
+        var comm = arrayOf<String>()
+        comm += "-i"
+        comm += "/storage/emulated/0/Videos/output.mp4"
+        comm += "-i"
+        //comm += "/storage/emulated/0/Download/18GP.mp4"
+//        while (NearbyCommunication.transferBackEndpoint == "") {
+//        }
+        NearbyCommunication.mutex.lock()
+        comm += "/storage/emulated/0/Download/" + NearbyCommunication.transferBackEndpoint + ".mp4"
+        comm += "-filter_complex"
+        comm += "[0][1]concat=n=2:v=1,format=yuv420p[v]"
+        comm += "-map"
+        comm += "[v]"
+        comm += "-y"
+        comm += "/storage/emulated/0/Videos/final_output.mp4"
+        NearbyCommunication.mutex.unlock()
+
+        return comm
     }
 
 }

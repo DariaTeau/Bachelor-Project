@@ -43,8 +43,8 @@
 
     <ImageView
         android:id="@+id/ivUploadedImg"
-        android:layout_width="267dp"
-        android:layout_height="313dp"
+        android:layout_width="309dp"
+        android:layout_height="311dp"
         android:contentDescription="@string/uploaded_photo"
         app:layout_constraintBottom_toTopOf="@+id/btUpload"
         app:layout_constraintEnd_toEndOf="parent"
@@ -77,10 +77,10 @@
         android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.407"
+        app:layout_constraintHorizontal_bias="0.293"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/btUpload"
-        app:layout_constraintVertical_bias="0.645" />
+        app:layout_constraintVertical_bias="1.0" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/btFireUpload"
@@ -93,11 +93,12 @@
         android:textAlignment="center"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.761"
+        app:layout_constraintHorizontal_bias="0.854"
         app:layout_constraintStart_toEndOf="@+id/swPrivacy"
         app:layout_constraintTop_toBottomOf="@+id/btUpload"
-        app:layout_constraintVertical_bias="0.253"
-        app:srcCompat="@android:drawable/ic_menu_upload" />
+        app:layout_constraintVertical_bias="0.529"
+        app:srcCompat="@android:drawable/ic_menu_upload"
+        app:useCompatPadding="true" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/btUpload"
@@ -109,11 +110,57 @@
         app:iconTint="#7F9F5A"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.957"
+        app:layout_constraintHorizontal_bias="0.972"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/video"
-        app:layout_constraintVertical_bias="0.567"
-        app:srcCompat="@android:drawable/ic_menu_gallery" />
+        app:layout_constraintVertical_bias="0.586"
+        app:srcCompat="@android:drawable/ic_menu_gallery"
+        app:useCompatPadding="true" />
+
+    <EditText
+        android:id="@+id/etDescription"
+        android:layout_width="244dp"
+        android:layout_height="49dp"
+        android:ems="10"
+        android:fontFamily="@font/bubbler_one"
+        android:gravity="start|top"
+        android:hint="Photo Description"
+        android:inputType="textMultiLine"
+        android:textColor="#608534"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.497"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/video"
+        app:layout_constraintVertical_bias="0.241" />
+
+    <ImageView
+        android:id="@+id/ivupperCorner"
+        android:layout_width="106dp"
+        android:layout_height="98dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.016"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.025"
+        app:srcCompat="@drawable/leaves" />
+
+    <ImageView
+        android:id="@+id/ivDownCorner"
+        android:layout_width="99dp"
+        android:layout_height="96dp"
+        android:rotation="184"
+        android:rotationX="-8"
+        android:rotationY="4"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.971"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.499"
+        app:srcCompat="@drawable/leaves" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

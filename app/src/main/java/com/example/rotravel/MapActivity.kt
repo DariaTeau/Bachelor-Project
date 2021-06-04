@@ -56,6 +56,9 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnInfoWin
                 .findFragmentById(R.id.uploadMap) as SupportMapFragment
         mapFragment.getMapAsync(this)
         //mapFragment.setHasOptionsMenu(true)
+
+        //NearbyCommunication.doInit(this)
+
         Places.initialize(this, "AIzaSyBKM7rITzpe9u2-kEu5lt_ePs4zpg4UChg")
         placesClient = Places.createClient(this)
         fireAuth = Firebase.auth

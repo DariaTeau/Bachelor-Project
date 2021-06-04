@@ -24,6 +24,7 @@ import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.database.DatabaseReference
@@ -38,10 +39,12 @@ class UserProfileActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.O
     private var photosUrls : HashMap<String, Array<String>> = HashMap()
     private var videosUrls : HashMap<String, Array<String>> = HashMap()
     private lateinit var bottomNav : BottomNavigationView
+    private lateinit var logoutBt : FloatingActionButton
+    private lateinit var listBt : FloatingActionButton
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_user_profile)
-
+        title = "Profile"
         val mapFragment = supportFragmentManager
                 .findFragmentById(R.id.user_map) as SupportMapFragment
         mapFragment.getMapAsync(this)
@@ -85,6 +88,23 @@ class UserProfileActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.O
 
             }
         }
+        logoutBt = findViewById(R.id.btLogout)
+        listBt = findViewById(R.id.btCollection)
+
+        logoutBt.setOnClickListener {
+            if(fireAuth.currentUser != null) {
+                fireAuth.signOut()
+                backToLogin()
+            }
+            mGoogleSignInClient.signOut().addOnCompleteListener {
+                backToLogin()
+            }
+        }
+
+        listBt.setOnClickListener {
+            val intent = Intent(this, DestinationListActivity::class.java).apply {}
+            startActivity(intent)
+        }
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
@@ -109,32 +129,32 @@ class UserProfileActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.O
         googleMap.setOnInfoWindowClickListener(this)
     }
 
-    override fun onCreateOptionsMenu(menu: Menu) : Boolean {
-        val inflater: MenuInflater = menuInflater
-        inflater.inflate(R.menu.user_profile_options, menu)
-        return true
-    }
+//    override fun onCreateOptionsMenu(menu: Menu) : Boolean {
+//        val inflater: MenuInflater = menuInflater
+//        inflater.inflate(R.menu.user_profile_options, menu)
+//        return true
+//    }
 
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
-            R.id.it_signOut -> {
-                if(fireAuth.currentUser != null) {
-                    fireAuth.signOut()
-                    backToLogin()
-                }
-                mGoogleSignInClient.signOut().addOnCompleteListener {
-                    backToLogin()
-                }
-                true
-            }
-            R.id.itDestList -> {
-                val intent = Intent(this, DestinationListActivity::class.java).apply {}
-                startActivity(intent)
-                true
-            }
-            else -> super.onOptionsItemSelected(item)
-        }
-    }
+//    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+//        return when (item.itemId) {
+//            R.id.it_signOut -> {
+//                if(fireAuth.currentUser != null) {
+//                    fireAuth.signOut()
+//                    backToLogin()
+//                }
+//                mGoogleSignInClient.signOut().addOnCompleteListener {
+//                    backToLogin()
+//                }
+//                true
+//            }
+//            R.id.itDestList -> {
+//                val intent = Intent(this, DestinationListActivity::class.java).apply {}
+//                startActivity(intent)
+//                true
+//            }
+//            else -> super.onOptionsItemSelected(item)
+//        }
+//    }
 
     private fun backToLogin() {
         val intent = Intent(this, MainActivity::class.java).apply {}
