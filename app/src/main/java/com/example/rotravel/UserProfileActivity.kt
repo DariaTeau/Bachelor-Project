@@ -6,11 +6,8 @@ import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
-import android.view.Menu
-import android.view.MenuInflater
-import android.view.MenuItem
-import android.widget.Button
-import android.widget.TextView
+import android.view.*
+import android.widget.*
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
@@ -27,7 +24,10 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
 
@@ -41,6 +41,7 @@ class UserProfileActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.O
     private lateinit var bottomNav : BottomNavigationView
     private lateinit var logoutBt : FloatingActionButton
     private lateinit var listBt : FloatingActionButton
+    private lateinit var addFriendBt : FloatingActionButton
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_user_profile)
@@ -90,6 +91,7 @@ class UserProfileActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.O
         }
         logoutBt = findViewById(R.id.btLogout)
         listBt = findViewById(R.id.btCollection)
+        addFriendBt = findViewById(R.id.btAddFriend)
 
         logoutBt.setOnClickListener {
             if(fireAuth.currentUser != null) {
@@ -105,6 +107,8 @@ class UserProfileActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.O
             val intent = Intent(this, DestinationListActivity::class.java).apply {}
             startActivity(intent)
         }
+
+        addFriendBt.setOnClickListener { createPopup() }
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
@@ -129,32 +133,6 @@ class UserProfileActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.O
         googleMap.setOnInfoWindowClickListener(this)
     }
 
-//    override fun onCreateOptionsMenu(menu: Menu) : Boolean {
-//        val inflater: MenuInflater = menuInflater
-//        inflater.inflate(R.menu.user_profile_options, menu)
-//        return true
-//    }
-
-//    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-//        return when (item.itemId) {
-//            R.id.it_signOut -> {
-//                if(fireAuth.currentUser != null) {
-//                    fireAuth.signOut()
-//                    backToLogin()
-//                }
-//                mGoogleSignInClient.signOut().addOnCompleteListener {
-//                    backToLogin()
-//                }
-//                true
-//            }
-//            R.id.itDestList -> {
-//                val intent = Intent(this, DestinationListActivity::class.java).apply {}
-//                startActivity(intent)
-//                true
-//            }
-//            else -> super.onOptionsItemSelected(item)
-//        }
-//    }
 
     private fun backToLogin() {
         val intent = Intent(this, MainActivity::class.java).apply {}
@@ -179,6 +157,84 @@ class UserProfileActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.O
         bundle.putStringArray("photos", photosUrls[key])
         intent.putExtras(bundle);
         startActivity(intent)
+    }
+
+    private fun createPopup() {
+        var popupWindow = PopupWindow(this)
+        val view = layoutInflater.inflate(R.layout.search_friend, null)
+        popupWindow.contentView = view
+        //TransitionManager.beginDelayedTransition(findViewById(R.layout.activity_map))
+        var name : EditText = view.findViewById(R.id.etFriendName)
+        var add : Button = view.findViewById(R.id.btFriend)
+        var search : Button = view.findViewById(R.id.btSearchFriend)
+        var friendUid = ""
+        var friend = ""
+        add.visibility = View.INVISIBLE
+        search.setOnClickListener {
+            friend = name.text.toString()
+            fireDB.child("Users").orderByChild("username").equalTo(friend)
+                .addValueEventListener(object : ValueEventListener {
+                    override fun onDataChange(snapshot: DataSnapshot) {
+                        if(snapshot.exists()) {
+                            for(item in snapshot.children) {
+                                friendUid = item.key.toString()
+                                Log.i("Friend UID", friendUid)
+                            }
+                            search.visibility = View.INVISIBLE
+                            add.visibility = View.VISIBLE
+                        } else {
+                            Toast.makeText(this@UserProfileActivity,"User does not exist", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+
+                    override fun onCancelled(error: DatabaseError) {
+                    }
+                } )
+        }
+        add.setOnClickListener {
+            checkFriendExists(friend, friendUid)
+            popupWindow.dismiss()}
+        popupWindow.showAtLocation(this.bottomNav, Gravity.CENTER, 0, 20)
+        popupWindow.setFocusable(true)
+        popupWindow.update()
+
+    }
+
+    private fun addToFriendList(name : String, uid : String) {
+        fireDB.child("Users").child(fireAuth.currentUser.uid).child("username").get().addOnSuccessListener {
+            if(it.exists()) {
+                fireDB.child("Users").child(uid).child("Pending")
+                    .child(it.value.toString()).get().addOnSuccessListener {
+                        if(it.exists()) {
+                            Toast.makeText(this, "Friend Request Already Sent", Toast.LENGTH_LONG).show()
+                        } else {
+                            it.ref.setValue(fireAuth.currentUser.uid)
+                            Toast.makeText(this, "Friend Request Sent", Toast.LENGTH_LONG).show()
+                        }
+                    }
+            }
+        }
+
+    }
+
+    private fun checkFriendExists(name : String, uid : String) {
+        if(uid == fireAuth.currentUser.uid) {
+            Toast.makeText(this@UserProfileActivity,"Can't add yourself", Toast.LENGTH_SHORT).show()
+            return
+        }
+        fireDB.child("Users").child(fireAuth.currentUser.uid).child("Friends").child(name).orderByValue()
+            .addValueEventListener(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    if(snapshot.exists()) {
+                        Toast.makeText(this@UserProfileActivity,"${name}  is already your friend", Toast.LENGTH_SHORT).show()
+                    } else {
+                        addToFriendList(name, uid)
+                    }
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                }
+            })
     }
 
 }

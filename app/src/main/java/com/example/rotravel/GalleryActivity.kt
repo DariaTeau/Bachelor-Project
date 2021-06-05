@@ -89,9 +89,6 @@ class GalleryActivity : AppCompatActivity() {
         var path = "photos/" + fireAuth.currentUser.uid + "/"
         if(privacySwitch.isChecked) {
             path += "friends/"
-        } else {
-            //TODO: modify to use public/ folder
-            //path += "public/"
         }
         if (imgUri != null) {
             //path = "photos/" + fireAuth.currentUser.uid + "/" + time + ".jpg"
@@ -122,7 +119,7 @@ class GalleryActivity : AppCompatActivity() {
             val lon = intent.getDoubleExtra("longitude", 0.0)
            // photoRef.downloadUrl.toString()
             photoRef.downloadUrl.addOnSuccessListener {
-                val info = ImgInfo(lat.toString(), lon.toString(), it.toString(), "spring")
+                val info = ImgInfo(lat.toString(), lon.toString(), it.toString(), "spring", privacySwitch.isChecked.toString())
                 newEntryRef.setValue(info)
                 Toast.makeText(this, "Upload successful", Toast.LENGTH_SHORT).show()
             }

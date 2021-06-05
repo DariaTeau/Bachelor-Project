@@ -25,6 +25,7 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
+import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
@@ -44,6 +45,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnInfoWin
     private var videoMap : HashMap<String, Array<String>> = HashMap()
     private var userImgMap : HashMap<String, Array<String>> = HashMap()
     private var userVideoMap : HashMap<String, Array<String>> = HashMap()
+    private var friendRequests : HashMap<String, String> = HashMap()
 
     private val AUTOCOMPLETE_REQUEST_CODE = 1
     private var destDescr : String = "default text"
@@ -111,7 +113,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnInfoWin
 //        }
 //
 //        fireDB.child("Photos").addValueEventListener(postListener)
-
+        checkRequests()
     }
 
     /**
@@ -232,53 +234,67 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnInfoWin
         fireDB.child("Photos").get().addOnSuccessListener {
             for(snap in it.children) {
                 for(ds in snap.children) {
-                    var lat = ds.child("lat")
-                    var lon = ds.child("lon")
-                    Log.i("getFromDB", lat.value.toString() + " " + lon.value.toString())
-                    var marker = LatLng(lat.value.toString().toDouble(), lon.value.toString().toDouble())
-                    val url = ds.child("url").value.toString()
-                    var key = lat.value.toString() + "&" + lon.value.toString()
-                    if(url.contains("mp4")) {
-                        var vidArr = videoMap[key]
-                        if(vidArr != null) {
-                            videoMap[key] = vidArr + url
-                        } else {
-                            videoMap[key] = arrayOf(url)
-                        }
+                    var private = ds.child("private").value.toString()
+                    if(private == "false" || snap.key.toString() == fireAuth.currentUser.uid) {
+                        computePhotos(ds, snap)
                     } else {
-                        var imgArr = imgMap[key]
-                        if(imgArr != null) {
-                            imgMap[key] = imgArr + url
-                        } else {
-                            imgMap[key] = arrayOf(url)
-                        }
+                        fireDB.child("Users").child(fireAuth.currentUser.uid).child("Friends").child(snap.key.toString()).get()
+                            .addOnSuccessListener {
+                                if(it.exists()) {
+                                    computePhotos(ds, snap)
+                                }
+                            }
                     }
 
-                    mMap.addMarker(MarkerOptions().position(marker).title("marker").title("Photos"))
-
-                    if(snap.key!! == fireAuth.uid) {
-                        if (url.contains("mp4")) {
-                            var arr = userVideoMap.get(key)
-                            if (arr != null) {
-                                userVideoMap[key] = arr + url
-                            } else {
-                                userVideoMap[key] = arrayOf(url)
-                            }
-                        } else {
-                            var arr = userImgMap.get(key)
-                            if (arr != null) {
-                                userImgMap[key] = arr + url
-                            } else {
-                                userImgMap[key] = arrayOf(url)
-                            }
-                        }
-                    }
                 }
             }
 
         }
     }
 
+    private fun computePhotos(ds : DataSnapshot, snap: DataSnapshot) {
+        var lat = ds.child("lat")
+        var lon = ds.child("lon")
+        Log.i("getFromDB", lat.value.toString() + " " + lon.value.toString())
+        var marker = LatLng(lat.value.toString().toDouble(), lon.value.toString().toDouble())
+        val url = ds.child("url").value.toString()
+        var key = lat.value.toString() + "&" + lon.value.toString()
+        if(url.contains("mp4")) {
+            var vidArr = videoMap[key]
+            if(vidArr != null) {
+                videoMap[key] = vidArr + url
+            } else {
+                videoMap[key] = arrayOf(url)
+            }
+        } else {
+            var imgArr = imgMap[key]
+            if(imgArr != null) {
+                imgMap[key] = imgArr + url
+            } else {
+                imgMap[key] = arrayOf(url)
+            }
+        }
+
+        mMap.addMarker(MarkerOptions().position(marker).title("marker").title("Photos"))
+
+        if(snap.key!! == fireAuth.uid) {
+            if (url.contains("mp4")) {
+                var arr = userVideoMap.get(key)
+                if (arr != null) {
+                    userVideoMap[key] = arr + url
+                } else {
+                    userVideoMap[key] = arrayOf(url)
+                }
+            } else {
+                var arr = userImgMap.get(key)
+                if (arr != null) {
+                    userImgMap[key] = arr + url
+                } else {
+                    userImgMap[key] = arrayOf(url)
+                }
+            }
+        }
+    }
     private fun autoCompleteIntent() {
 
         // Set the fields to specify which types of place data to
@@ -330,6 +346,37 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnInfoWin
             .child(destDescr).setValue(marker.position.latitude.toString() + ";" + marker.position.longitude.toString())
 
         Toast.makeText(this, "Destination added to your travel list", Toast.LENGTH_LONG).show()
+    }
+
+    private fun checkRequests() {
+        fireDB.child("Users").child(fireAuth.currentUser.uid).child("Pending").get().addOnSuccessListener {
+            if(it.exists()) {
+                for(item in it.children) {
+                    friendRequests[item.key.toString()] = item.value.toString()
+                }
+                popForFriendReq()
+            }
+        }
+    }
+
+    private fun popForFriendReq() {
+        var popupWindow = PopupWindow(this)
+        val view = layoutInflater.inflate(R.layout.friend_request_popup, null)
+        popupWindow.contentView = view
+        //TransitionManager.beginDelayedTransition(findViewById(R.layout.activity_map))
+        var check : ImageButton = view.findViewById(R.id.ibCheck)
+        var cancel : ImageButton = view.findViewById(R.id.ibCancel)
+        cancel.setOnClickListener {
+            popupWindow.dismiss()}
+        check.setOnClickListener {
+            val intent = Intent(this, DisplayFriendRequestsActivity::class.java).apply {}
+            intent.putExtra("requests", friendRequests)
+            popupWindow.dismiss()
+            startActivity(intent)}
+        popupWindow.showAtLocation(this.bottomNav, Gravity.CENTER, 0, 20)
+        popupWindow.setFocusable(true)
+        popupWindow.update()
+
     }
 
 }
