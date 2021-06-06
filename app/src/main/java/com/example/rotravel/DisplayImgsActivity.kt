@@ -19,10 +19,12 @@ class DisplayImgsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_display_imgs)
 
+        var details = intent.getSerializableExtra("details") as HashMap<String, ItemDetails>
+
         galleryView = findViewById(R.id.rvGallery)
         galleryView.layoutManager = GridLayoutManager(this, 3, GridLayoutManager.VERTICAL, false)
         val arr = intent.getStringArrayExtra("photos")
-        adapter = arr?.let { DisplayImgAdapter(it) }
+        adapter = arr?.let { DisplayImgAdapter(it, details) }
         galleryView.adapter = adapter
     }
 }

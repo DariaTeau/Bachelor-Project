@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.util.Log
 import android.view.*
 import android.widget.*
+import androidx.recyclerview.widget.RecyclerView
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
@@ -42,6 +43,10 @@ class UserProfileActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.O
     private lateinit var logoutBt : FloatingActionButton
     private lateinit var listBt : FloatingActionButton
     private lateinit var addFriendBt : FloatingActionButton
+    private var friendRequests : HashMap<String, String> = HashMap()
+    private var destDescr : String = "default text"
+    private var videoDetails : HashMap<String, HashMap<String, ItemDetails>> = HashMap()
+    private var photoDetails : HashMap<String, HashMap<String, ItemDetails>> = HashMap()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_user_profile)
@@ -63,6 +68,9 @@ class UserProfileActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.O
         photosUrls = intent.getSerializableExtra("imgMap") as HashMap<String, Array<String>>
         videosUrls = intent.getSerializableExtra("videoMap") as HashMap<String, Array<String>>
 
+        photoDetails = intent.getSerializableExtra("photoDetails") as HashMap<String, HashMap<String, ItemDetails>>
+        videoDetails = intent.getSerializableExtra("videoDetails") as HashMap<String, HashMap<String, ItemDetails>>
+
         bottomNav = findViewById(R.id.navButton)
         //bottomNav.inflateMenu(R.menu.main_map_options)
         bottomNav.selectedItemId = R.id.profileItem
@@ -74,6 +82,8 @@ class UserProfileActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.O
                     intent.putExtra("videoMap", this.intent.getSerializableExtra("videoAll") as Array<String>)
                     intent.putExtra("userImgMap", this.intent.getSerializableExtra("imgMap"))
                     intent.putExtra("userVideoMap", this.intent.getSerializableExtra("videoMap"))
+                    intent.putExtra("userPhotoDetails", photoDetails)
+                    intent.putExtra("userVideoDetails", videoDetails)
                     startActivity(intent)
                     true
                 }
@@ -149,16 +159,75 @@ class UserProfileActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.O
 
     override fun onInfoWindowClick(marker: Marker) {
 
+        val popup = PopupMenu(this, this.bottomNav, Gravity.CENTER)
+        popup.menuInflater.inflate(R.menu.marker_popup_menu, popup.menu)
+        popup.setOnMenuItemClickListener(PopupMenu.OnMenuItemClickListener { item ->
+            when(item.itemId) {
+                R.id.itemPhotos -> {
+                    //Toast.makeText(this, "You Clicked : " + item.title, Toast.LENGTH_SHORT).show()
+                    launchPhotosDisplay(marker) }
+                R.id.itemVideos -> {
+                    //Toast.makeText(this, "You Clicked : " + item.title, Toast.LENGTH_SHORT).show()
+                    launchVideosDisplay(marker)
+                }
+                R.id.itemList -> {
+                    //popup.dismiss()
+                    createMapPopup(marker)
+                    //Toast.makeText(this, "You Clicked : " + item.title, Toast.LENGTH_SHORT).show()
+                }
+            }
+            true
+        })
+        popup.show()
+    }
+    private fun launchPhotosDisplay(marker : Marker) {
         val intent = Intent(this, DisplayImgsActivity::class.java).apply {}
-        //val intent = Intent(this, ChooseMediaActivity::class.java).apply {}
+        //val intent = Intent(this, GalleryItemActivity::class.java).apply {}
+        var bundle : Bundle = Bundle()
+        val key = marker.position.latitude.toString() + "&" + marker.position.longitude.toString()
+        //bundle.putStringArray("videos", videoMap[key])
+        bundle.putStringArray("photos", photosUrls[key])
+        intent.putExtra("details", photoDetails[key])
+        intent.putExtras(bundle);
+        startActivity(intent)
+
+    }
+
+    private fun launchVideosDisplay(marker : Marker) {
+        val intent = Intent(this, DisplayVideosActivity::class.java).apply {}
+        //val intent = Intent(this, GalleryItemActivity::class.java).apply {}
         var bundle : Bundle = Bundle()
         val key = marker.position.latitude.toString() + "&" + marker.position.longitude.toString()
         bundle.putStringArray("videos", videosUrls[key])
-        bundle.putStringArray("photos", photosUrls[key])
+        //bundle.putStringArray("photos", imgMap[key])
+        intent.putExtra("details", videoDetails[key])
         intent.putExtras(bundle);
         startActivity(intent)
+
     }
 
+    private fun createMapPopup(marker : Marker) {
+        var popupWindow = PopupWindow(this)
+        val view = layoutInflater.inflate(R.layout.descr_popup_window, null)
+        popupWindow.contentView = view
+        //TransitionManager.beginDelayedTransition(findViewById(R.layout.activity_map))
+        var descr : EditText = view.findViewById(R.id.etDestName)
+        var done : Button = view.findViewById(R.id.btDone)
+        done.setOnClickListener {
+            destDescr = descr.text.toString()
+            addToDestList(marker)
+            popupWindow.dismiss()}
+        popupWindow.showAtLocation(this.bottomNav, Gravity.CENTER, 0, 20)
+        popupWindow.setFocusable(true)
+        popupWindow.update()
+
+    }
+    private fun addToDestList(marker: Marker) {
+        fireDB.child("Users").child(fireAuth.currentUser.uid).child("FutureDest")
+            .child(destDescr).setValue(marker.position.latitude.toString() + ";" + marker.position.longitude.toString())
+
+        Toast.makeText(this, "Destination added to your travel list", Toast.LENGTH_LONG).show()
+    }
     private fun createPopup() {
         var popupWindow = PopupWindow(this)
         val view = layoutInflater.inflate(R.layout.search_friend, null)
@@ -167,6 +236,7 @@ class UserProfileActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.O
         var name : EditText = view.findViewById(R.id.etFriendName)
         var add : Button = view.findViewById(R.id.btFriend)
         var search : Button = view.findViewById(R.id.btSearchFriend)
+        var manage : ImageButton = view.findViewById(R.id.ibManage)
         var friendUid = ""
         var friend = ""
         add.visibility = View.INVISIBLE
@@ -194,10 +264,35 @@ class UserProfileActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.O
         add.setOnClickListener {
             checkFriendExists(friend, friendUid)
             popupWindow.dismiss()}
+        manage.setOnClickListener {
+            getFriends()
+            popupWindow.dismiss()
+        }
         popupWindow.showAtLocation(this.bottomNav, Gravity.CENTER, 0, 20)
         popupWindow.setFocusable(true)
         popupWindow.update()
 
+    }
+
+    private fun getFriends() {
+        fireDB.child("Users").child(fireAuth.currentUser.uid).child("Friends").get().addOnSuccessListener {
+            if(it.exists()) {
+                for(item in it.children) {
+                    friendRequests[item.key.toString()] = item.value.toString()
+                }
+                if(friendRequests.isEmpty()) {
+                    Toast.makeText(this, "Friend list is empty", Toast.LENGTH_LONG).show()
+                } else {
+                    showFriends()
+                }
+            }
+        }
+    }
+    private fun showFriends() {
+        val intent = Intent(this, DisplayFriendRequestsActivity::class.java).apply {}
+        intent.putExtra("requests", friendRequests)
+        intent.putExtra("friends", true)
+        startActivity(intent)
     }
 
     private fun addToFriendList(name : String, uid : String) {
@@ -235,6 +330,40 @@ class UserProfileActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.O
                 override fun onCancelled(error: DatabaseError) {
                 }
             })
+    }
+
+    class FriendViewHolder(val view: View): RecyclerView.ViewHolder(view) {
+        private lateinit var name: TextView
+        private lateinit var accept: ImageButton
+        private lateinit var decline: ImageButton
+        lateinit var fireAuth: FirebaseAuth
+        private lateinit var fireDB: DatabaseReference
+        fun init(friendName: String, friendUid: String) {
+            fireAuth = Firebase.auth
+            fireDB =
+                Firebase.database("https://rotravel-14ed2-default-rtdb.europe-west1.firebasedatabase.app/").reference
+            name = view.findViewById(R.id.tvFriendName)
+            accept = view.findViewById(R.id.ibAccept)
+            accept.visibility = View.INVISIBLE
+            decline = view.findViewById(R.id.ibDecline)
+            name.text = friendName
+            decline.setOnClickListener {
+                removeFriend(friendUid, friendName)
+                Log.i("addRequests", "declined for " + name.text)
+            }
+        }
+
+        private fun removeFriend(friendUid: String, name: String) {
+            fireDB.child("Users").child(fireAuth.currentUser.uid).child("Friends").child(name)
+                .removeValue()
+            fireDB.child("Users").child(fireAuth.currentUser.uid).child("username").get().addOnSuccessListener {
+                if(it.exists()) {
+                    fireDB.child("Users").child(friendUid).child("Friends")
+                        .child(it.value.toString()).removeValue()
+                }
+            }
+        }
+
     }
 
 }

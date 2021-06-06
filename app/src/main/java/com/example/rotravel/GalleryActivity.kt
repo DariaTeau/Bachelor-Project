@@ -42,6 +42,7 @@ import java.util.*
 class GalleryActivity : AppCompatActivity() {
     private lateinit var galleryButton: FloatingActionButton
     private lateinit var uploadButton : FloatingActionButton
+    private lateinit var descr : EditText
     private lateinit var privacySwitch : androidx.appcompat.widget.SwitchCompat
     private var onlyFriends = false
     private lateinit var uploadedImg : ImageView
@@ -67,6 +68,7 @@ class GalleryActivity : AppCompatActivity() {
         createdVideo = findViewById(R.id.video)
         uploadButton = findViewById(R.id.btFireUpload)
         privacySwitch = findViewById(R.id.swPrivacy)
+        descr = findViewById(R.id.etDescription)
         fireAuth = Firebase.auth
         fireDB = Firebase.database("https://rotravel-14ed2-default-rtdb.europe-west1.firebasedatabase.app/").reference
 
@@ -119,7 +121,7 @@ class GalleryActivity : AppCompatActivity() {
             val lon = intent.getDoubleExtra("longitude", 0.0)
            // photoRef.downloadUrl.toString()
             photoRef.downloadUrl.addOnSuccessListener {
-                val info = ImgInfo(lat.toString(), lon.toString(), it.toString(), "spring", privacySwitch.isChecked.toString())
+                val info = ImgInfo(lat.toString(), lon.toString(), it.toString(), "spring", privacySwitch.isChecked.toString(), descr.text.toString())
                 newEntryRef.setValue(info)
                 Toast.makeText(this, "Upload successful", Toast.LENGTH_SHORT).show()
             }

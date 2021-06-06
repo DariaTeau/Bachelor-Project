@@ -46,6 +46,11 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnInfoWin
     private var userImgMap : HashMap<String, Array<String>> = HashMap()
     private var userVideoMap : HashMap<String, Array<String>> = HashMap()
     private var friendRequests : HashMap<String, String> = HashMap()
+    private var videoDetails : HashMap<String, HashMap<String, ItemDetails>> = HashMap()
+    private var photoDetails : HashMap<String, HashMap<String, ItemDetails>> = HashMap()
+    private var userVideoDetails : HashMap<String, HashMap<String, ItemDetails>> = HashMap()
+    private var userPhotoDetails : HashMap<String, HashMap<String, ItemDetails>> = HashMap()
+
 
     private val AUTOCOMPLETE_REQUEST_CODE = 1
     private var destDescr : String = "default text"
@@ -78,6 +83,8 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnInfoWin
                     intent.putExtra("videoMap", videoMap.keys.toTypedArray())
                     intent.putExtra("userImgMap", userImgMap)
                     intent.putExtra("userVideoMap", userVideoMap)
+                    intent.putExtra("userPhotoDetails", userPhotoDetails)
+                    intent.putExtra("userVideoDetails", userVideoDetails)
                     startActivity(intent)
                     true
                 }
@@ -86,6 +93,8 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnInfoWin
                     val intent = Intent(this, UserProfileActivity::class.java).apply {}
                     intent.putExtra("imgMap", userImgMap)
                     intent.putExtra("videoMap", userVideoMap)
+                    intent.putExtra("photoDetails", userPhotoDetails)
+                    intent.putExtra("videoDetails", userVideoDetails)
                     intent.putExtra("imgAll", imgMap.keys.toTypedArray())
                     intent.putExtra("videoAll", videoMap.keys.toTypedArray())
                     startActivity(intent)
@@ -208,11 +217,12 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnInfoWin
 
     private fun launchPhotosDisplay(marker : Marker) {
         val intent = Intent(this, DisplayImgsActivity::class.java).apply {}
-        //val intent = Intent(this, ChooseMediaActivity::class.java).apply {}
+        //val intent = Intent(this, GalleryItemActivity::class.java).apply {}
         var bundle : Bundle = Bundle()
         val key = marker.position.latitude.toString() + "&" + marker.position.longitude.toString()
         //bundle.putStringArray("videos", videoMap[key])
         bundle.putStringArray("photos", imgMap[key])
+        intent.putExtra("details", photoDetails[key])
         intent.putExtras(bundle);
         startActivity(intent)
 
@@ -220,11 +230,12 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnInfoWin
 
     private fun launchVideosDisplay(marker : Marker) {
         val intent = Intent(this, DisplayVideosActivity::class.java).apply {}
-        //val intent = Intent(this, ChooseMediaActivity::class.java).apply {}
+        //val intent = Intent(this, GalleryItemActivity::class.java).apply {}
         var bundle : Bundle = Bundle()
         val key = marker.position.latitude.toString() + "&" + marker.position.longitude.toString()
         bundle.putStringArray("videos", videoMap[key])
         //bundle.putStringArray("photos", imgMap[key])
+        intent.putExtra("details", videoDetails[key])
         intent.putExtras(bundle);
         startActivity(intent)
 
@@ -259,19 +270,37 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnInfoWin
         var marker = LatLng(lat.value.toString().toDouble(), lon.value.toString().toDouble())
         val url = ds.child("url").value.toString()
         var key = lat.value.toString() + "&" + lon.value.toString()
+        var descr = ""
+        if(ds.child("description").exists()) {
+            descr = ds.child("description").value.toString()
+        }
         if(url.contains("mp4")) {
             var vidArr = videoMap[key]
             if(vidArr != null) {
                 videoMap[key] = vidArr + url
+                videoDetails[key]?.set(url,
+                    ItemDetails(snap.key.toString(), descr)
+                )
             } else {
                 videoMap[key] = arrayOf(url)
+                videoDetails[key] = HashMap()
+                videoDetails[key]?.set(url,
+                    ItemDetails(snap.key.toString(), descr)
+                )
             }
         } else {
             var imgArr = imgMap[key]
             if(imgArr != null) {
                 imgMap[key] = imgArr + url
+                photoDetails[key]?.set(url,
+                    ItemDetails(snap.key.toString(), descr)
+                )
             } else {
                 imgMap[key] = arrayOf(url)
+                photoDetails[key] = HashMap()
+                photoDetails[key]?.set(url,
+                    ItemDetails(snap.key.toString(), descr)
+                )
             }
         }
 
@@ -282,15 +311,29 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnInfoWin
                 var arr = userVideoMap.get(key)
                 if (arr != null) {
                     userVideoMap[key] = arr + url
+                    userVideoDetails[key]?.set(url,
+                        ItemDetails(snap.key.toString(), descr)
+                    )
                 } else {
                     userVideoMap[key] = arrayOf(url)
+                    userVideoDetails[key] = HashMap()
+                    userVideoDetails[key]?.set(url,
+                        ItemDetails(snap.key.toString(), descr)
+                    )
                 }
             } else {
                 var arr = userImgMap.get(key)
                 if (arr != null) {
                     userImgMap[key] = arr + url
+                    userPhotoDetails[key]?.set(url,
+                        ItemDetails(snap.key.toString(), descr)
+                    )
                 } else {
                     userImgMap[key] = arrayOf(url)
+                    userPhotoDetails[key] = HashMap()
+                    userPhotoDetails[key]?.set(url,
+                        ItemDetails(snap.key.toString(), descr)
+                    )
                 }
             }
         }
@@ -341,7 +384,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnInfoWin
         super.onActivityResult(requestCode, resultCode, data)
     }
 
-    private fun addToDestList(marker: Marker) {
+     private fun addToDestList(marker: Marker) {
         fireDB.child("Users").child(fireAuth.currentUser.uid).child("FutureDest")
             .child(destDescr).setValue(marker.position.latitude.toString() + ";" + marker.position.longitude.toString())
 
@@ -371,6 +414,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnInfoWin
         check.setOnClickListener {
             val intent = Intent(this, DisplayFriendRequestsActivity::class.java).apply {}
             intent.putExtra("requests", friendRequests)
+            intent.putExtra("friends", false)
             popupWindow.dismiss()
             startActivity(intent)}
         popupWindow.showAtLocation(this.bottomNav, Gravity.CENTER, 0, 20)

@@ -14,6 +14,7 @@
         android:fontFamily="@font/bubbler_one"
         android:hint="Your Friend's Username"
         android:inputType="textPersonName"
+        android:textColor="#7ECF82"
         android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -49,4 +50,33 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/etFriendName"
         app:layout_constraintVertical_bias="0.087" />
+
+    <TextView
+        android:id="@+id/textView2"
+        android:layout_width="153dp"
+        android:layout_height="30dp"
+        android:fontFamily="@font/bubbler_one"
+        android:text="Manage your friends"
+        android:textColor="#CADAB8"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.317"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/btFriend"
+        app:layout_constraintVertical_bias="0.076" />
+
+    <ImageButton
+        android:id="@+id/ibManage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toEndOf="@+id/textView2"
+        app:layout_constraintTop_toBottomOf="@+id/btFriend"
+        app:layout_constraintVertical_bias="0.078"
+        app:srcCompat="@drawable/outline_manage_accounts_20" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

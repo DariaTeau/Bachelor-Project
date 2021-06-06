@@ -10,7 +10,7 @@ import androidx.annotation.LayoutRes
 import androidx.core.content.ContextCompat.startActivity
 import androidx.recyclerview.widget.RecyclerView
 
-class DisplayVideosAdapter(private val videos: Array<String>) : RecyclerView.Adapter<VideoItemViewHolder>() {
+class DisplayVideosAdapter(private val videos: Array<String>, private val details : HashMap<String, ItemDetails>) : RecyclerView.Adapter<VideoItemViewHolder>() {
     override fun getItemCount(): Int {
         return videos.size
     }
@@ -25,12 +25,14 @@ class DisplayVideosAdapter(private val videos: Array<String>) : RecyclerView.Ada
         holder.bindVideo(url)
         var vid = holder.videoView.findViewById(R.id.vvModel) as VideoView
         vid.setOnClickListener {
-            val intent = Intent(vid.context, ChooseMediaActivity::class.java).apply {}
+            val intent = Intent(vid.context, GalleryItemActivity::class.java).apply {}
             var bundle : Bundle = Bundle()
             //val key = marker.position.latitude.toString() + "&" + marker.position.longitude.toString()
             //bundle.putStringArray("videos", videoMap[key])
             bundle.putString("video", url)
             intent.putExtras(bundle)
+            intent.putExtra("descr", details[url]?.description)
+            intent.putExtra("user", details[url]?.uid)
             startActivity(vid.context, intent, bundle)
         }
     }

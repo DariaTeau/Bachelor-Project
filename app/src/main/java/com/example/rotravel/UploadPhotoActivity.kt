@@ -41,6 +41,8 @@ class UploadPhotoActivity : AppCompatActivity(), OnMapReadyCallback,
                     intent.putExtra("videoMap", this.intent.getSerializableExtra("userVideoMap"))
                     intent.putExtra("imgAll", this.intent.getSerializableExtra("imgMap"))
                     intent.putExtra("videoAll", this.intent.getSerializableExtra("videoMap"))
+                    intent.putExtra("photoDetails", this.intent.getSerializableExtra("userPhotoDetails"))
+                    intent.putExtra("videoDetails", this.intent.getSerializableExtra("userVideoDetails"))
                     startActivity(intent)
                     true
                 }

@@ -19,12 +19,14 @@ import com.google.firebase.ktx.Firebase
 class DisplayFriendRequestsActivity : AppCompatActivity() {
     private lateinit var list: RecyclerView
     private var adapter : DisplayFriendReqAdapter? = null
+    private var frAdapter : FriendsAdapter? = null
     lateinit var fireAuth : FirebaseAuth
     private lateinit var fireDB : DatabaseReference
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.display_fr_req)
         val requests = intent.getSerializableExtra("requests") as HashMap<String, String>
+        val friends = intent.getBooleanExtra("friends", false) as Boolean
         list = findViewById(R.id.rvRequests)
         var arr = arrayOf<String>()
         var uids = arrayOf<String?>()
@@ -34,8 +36,14 @@ class DisplayFriendRequestsActivity : AppCompatActivity() {
         }
         Log.i("display friends", arr.size.toString())
         //adapter = arr?.let { DisplayFriendReqAdapter(it, uids) }
-        adapter = DisplayFriendReqAdapter(arr, uids)
-        list.adapter = adapter
+        if(friends) {
+            frAdapter = FriendsAdapter(arr, uids)
+            list.adapter = frAdapter
+        } else {
+            adapter = DisplayFriendReqAdapter(arr, uids)
+            list.adapter = adapter
+        }
+
         list.layoutManager = LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
 
         fireAuth = Firebase.auth

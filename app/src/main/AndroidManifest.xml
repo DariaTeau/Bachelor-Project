@@ -42,7 +42,7 @@
             android:name=".DestinationListActivity"
             android:label="@string/title_activity_destination_list" />
         <activity android:name=".DisplayVideosActivity" />
-        <activity android:name=".ChooseMediaActivity" />
+        <activity android:name=".GalleryItemActivity" />
         <activity android:name=".DisplayImgsActivity" />
         <activity android:name=".RegisterActivity" />
         <activity
