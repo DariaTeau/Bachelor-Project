@@ -19,7 +19,11 @@ class DisplayImgsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_display_imgs)
 
-        var details = intent.getSerializableExtra("details") as HashMap<String, ItemDetails>
+        var details = HashMap<String, ItemDetails>()
+        var extra = intent.getSerializableExtra("details")
+        if(extra != null) {
+            details = extra as HashMap<String, ItemDetails>
+        }
 
         galleryView = findViewById(R.id.rvGallery)
         galleryView.layoutManager = GridLayoutManager(this, 3, GridLayoutManager.VERTICAL, false)

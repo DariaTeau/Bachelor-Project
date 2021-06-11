@@ -31,6 +31,8 @@ class DisplayVideosAdapter(private val videos: Array<String>, private val detail
             //bundle.putStringArray("videos", videoMap[key])
             bundle.putString("video", url)
             intent.putExtras(bundle)
+            intent.putExtra("videos", videos)
+            intent.putExtra("details", details)
             intent.putExtra("descr", details[url]?.description)
             intent.putExtra("user", details[url]?.uid)
             startActivity(vid.context, intent, bundle)

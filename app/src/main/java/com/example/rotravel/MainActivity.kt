@@ -1,8 +1,12 @@
 package com.example.rotravel
 
 import android.Manifest
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.os.BatteryManager
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
@@ -21,6 +25,8 @@ import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.database.ktx.database
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -51,7 +57,7 @@ class MainActivity : AppCompatActivity() {
 
         usersMap["ana"] = "1234"
 
-        loginButton.setOnClickListener{ login() }
+        loginButton.setOnClickListener { login() }
         registerButton.setOnClickListener { register() }
         requestPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission())
         { isGranted: Boolean ->
@@ -62,33 +68,57 @@ class MainActivity : AppCompatActivity() {
             }
         }
         checkPerm()
-        GlobalScope.launch(Dispatchers.IO) {
-            Log.i("MainActivity", "launch -> ${Thread.currentThread().name}")
-            NearbyCommunication.doInit(this@MainActivity) }
+        var battery = getBatteryPercentage(this)
+        Log.i("MainActivity", "battery is $battery")
+        if (battery >= 25) {
+            GlobalScope.launch(Dispatchers.IO) {
+                Log.i("MainActivity", "launch -> ${Thread.currentThread().name}")
+                NearbyCommunication.doInit(this@MainActivity)
+            }
+        }
 
 
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestIdToken("318758695349-3ntogdpicl027jop4dqtb05jd2jvgd1v.apps.googleusercontent.com")
-            .requestEmail()
-            .build()
+                .requestIdToken("164156353820-k2c925jcb4ub1b3h7k4n7vmjvs5d4jg5.apps.googleusercontent.com")
+                .requestEmail()
+                .build()
 
         mGoogleSignInClient = GoogleSignIn.getClient(this, gso)
 
-        var account : GoogleSignInAccount? = GoogleSignIn.getLastSignedInAccount(this);
-        if (account != null) {
+        //var account : GoogleSignInAccount? = GoogleSignIn.getLastSignedInAccount(this);
+//        if (account != null) {
+//            //goToMapActivity()
+//        } else {
+
+        fireAuth = Firebase.auth
+        if (fireAuth.currentUser != null) {
             goToMapActivity()
         } else {
             googleLoginButton = findViewById(R.id.sign_in_button)
-            googleLoginButton.setOnClickListener{
+            googleLoginButton.setOnClickListener {
                 googleSignIn()
             }
         }
 
-        fireAuth = Firebase.auth
-        if(fireAuth.currentUser != null) {
-            goToMapActivity()
-        }
+    }
 
+    fun getBatteryPercentage(context: Context): Int {
+        if (Build.VERSION.SDK_INT >= 21) {
+            val bm = context.getSystemService(BATTERY_SERVICE) as BatteryManager
+            return bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
+
+        } else {
+            val iFilter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
+            val batteryStatus: Intent? = context.registerReceiver(null, iFilter)
+            val level = batteryStatus?.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
+            val scale = batteryStatus?.getIntExtra(BatteryManager.EXTRA_SCALE, -1)
+            val batteryPct = scale?.let { level?.div(it.toDouble()) }
+            return if(batteryPct != null) {
+                (batteryPct * 100).toInt()
+            } else {
+                -1
+            }
+        }
     }
 
     private fun checkPerm() {
@@ -121,7 +151,7 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    private fun login() {
+     fun login() {
         var inputUser = user.text.toString()
         var inputPassword = password.text.toString()
 
@@ -144,12 +174,12 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    private fun register() {
+     fun register() {
         val intent : Intent = Intent(this, RegisterActivity::class.java).apply {}
         startActivity(intent)
     }
 
-    private fun googleSignIn() {
+     fun googleSignIn() {
         var  signInIntent : Intent? = mGoogleSignInClient.signInIntent;
         startActivityForResult(signInIntent, reqCodeSignIn);
     }
@@ -162,20 +192,51 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun handleSignInResult(completedTask : Task<GoogleSignInAccount>) {
+     fun handleSignInResult(completedTask : Task<GoogleSignInAccount>) {
         var  account : GoogleSignInAccount? = completedTask.result
 
         if(account != null) {
             // Signed in successfully, show authenticated UI.
-            goToMapActivity()
+                Log.i("NAMEE", account.displayName)
+            firebaseAuthWithGoogle(account.idToken!!, account.email!!, account.displayName!!)
         } else {
             Toast.makeText(this, "Failed to Sign In with Google", Toast.LENGTH_SHORT).show()
         }
     }
 
-    private fun goToMapActivity() {
+    fun goToMapActivity() {
         val intent : Intent = Intent(this, MapActivity::class.java).apply {}
         startActivity(intent)
     }
 
+    fun firebaseAuthWithGoogle(idToken: String, email : String, name : String) {
+        val credential = GoogleAuthProvider.getCredential(idToken, null)
+        fireAuth.signInWithCredential(credential)
+                .addOnCompleteListener(this) { task ->
+                    if (task.isSuccessful) {
+                        // Sign in success, update UI with the signed-in user's information
+                        Log.d("firebaseAuthWithGoogle", "signInWithCredential:success")
+                        Toast.makeText(this, "Successful Login", Toast.LENGTH_SHORT).show()
+                        //val user = auth.currentUser
+                        addInfoToDB(name, email)
+                        goToMapActivity()
+                    } else {
+                        // If sign in fails, display a message to the user.
+                        Log.w("firebaseAuthWithGoogle", "signInWithCredential:failure", task.exception)
+                        Toast.makeText(this, "Login failed", Toast.LENGTH_SHORT).show()
+                       // updateUI(null)
+                    }
+                }
+    }
+    private fun addInfoToDB(name : String, email : String) {
+        val dbRef = Firebase.database("https://rotravel-14ed2-default-rtdb.europe-west1.firebasedatabase.app/").reference
+        val info = UserInfo(name, email)
+        dbRef.child("Users").child(fireAuth.currentUser.uid).get()
+                .addOnSuccessListener {
+                    if(!it.exists()) {
+                        val ref = dbRef.child("Users").child(fireAuth.currentUser.uid).push()
+                        dbRef.child("Users").child(fireAuth.currentUser.uid).setValue(info)
+                    }
+                }
+    }
 }

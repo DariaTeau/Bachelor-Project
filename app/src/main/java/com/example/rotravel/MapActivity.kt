@@ -2,7 +2,11 @@ package com.example.rotravel
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
+import android.os.BatteryManager
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.transition.TransitionManager
@@ -30,6 +34,7 @@ import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
+import com.squareup.picasso.Picasso
 import java.util.*
 import kotlin.collections.HashMap
 
@@ -169,7 +174,8 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnInfoWin
         }
 
         override fun getInfoContents(marker: Marker): View? {
-            contents.findViewById<ImageView>(R.id.ivInfoWin).setImageResource(R.drawable.bucharest)
+
+            contents.findViewById<ImageView>(R.id.ivInfoWin).setImageResource(R.drawable.forest)
             return contents
         }
 
@@ -249,12 +255,17 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnInfoWin
                     if(private == "false" || snap.key.toString() == fireAuth.currentUser.uid) {
                         computePhotos(ds, snap)
                     } else {
-                        fireDB.child("Users").child(fireAuth.currentUser.uid).child("Friends").child(snap.key.toString()).get()
-                            .addOnSuccessListener {
-                                if(it.exists()) {
-                                    computePhotos(ds, snap)
+                        Log.i("getPins", snap.key.toString())
+                        fireDB.child("Users").child(snap.key.toString()).child("username").get()
+                                .addOnSuccessListener {
+                                    fireDB.child("Users").child(fireAuth.currentUser.uid).child("Friends").child(it.value.toString()).get()
+                                            .addOnSuccessListener {
+                                                if(it.exists()) {
+                                                    computePhotos(ds, snap)
+                                                }
+                                            }
                                 }
-                            }
+
                     }
 
                 }

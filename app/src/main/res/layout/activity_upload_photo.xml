@@ -16,6 +16,20 @@
         android:layout_height="match_parent"
         tools:context=".UploadPhotoActivity" />
 
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/btSearch2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:clickable="true"
+        app:backgroundTint="#CDDC39"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.954"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/uploadMap"
+        app:layout_constraintVertical_bias="0.028"
+        app:srcCompat="@android:drawable/ic_menu_search" />
+
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/navButton"
         android:layout_width="409dp"

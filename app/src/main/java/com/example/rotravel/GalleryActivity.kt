@@ -58,6 +58,7 @@ class GalleryActivity : AppCompatActivity() {
     private val TAG = "executing ffmpeg command"
     private var begin : Long = 0
     private var end : Long = 0
+    private var single = true
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         //NearbyCommunication.doInit(this)
@@ -109,7 +110,11 @@ class GalleryActivity : AppCompatActivity() {
             val data = baos.toByteArray()
             uploadTask = photoRef.putBytes(data)
         } else {
-            uploadTask = photoRef.putFile(Uri.fromFile(File("/storage/emulated/0/Videos/output.mp4")))
+            if(single) {
+                uploadTask = photoRef.putFile(Uri.fromFile(File("/storage/emulated/0/Videos/output.mp4")))
+            } else {
+                uploadTask = photoRef.putFile(Uri.fromFile(File("/storage/emulated/0/Videos/final_output.mp4")))
+            }
         }
         uploadTask?.addOnFailureListener {
             // Handle unsuccessful uploads
@@ -127,6 +132,9 @@ class GalleryActivity : AppCompatActivity() {
             }
 
         }
+    }
+    private fun edit() {
+
     }
     private fun selectMultiple() {
         var intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.INTERNAL_CONTENT_URI)
@@ -153,27 +161,17 @@ class GalleryActivity : AppCompatActivity() {
                     return;
                 }
                 createdVideo.visibility = View.VISIBLE
-                for(i in 0..(count/2)) {
-                    val item = data.clipData?.getItemAt(i)
-                    if(item != null) {
-                        sendImgs += item.uri
-                    }
-                }
-                GlobalScope.launch(Dispatchers.IO) {
-                    Log.i("GalleryActivity", "launch -> ${Thread.currentThread().name}")
-                    NearbyCommunication.mutex.lock()
-                    createAndSendPayload()}
-                for (i in (count/2)+1..count - 1) {
-                    val item = data.clipData?.getItemAt(i)
-                    if(item != null) {
-                        videoImgs += item.uri
-                    }
-                }
-                GlobalScope.launch(Dispatchers.Default) {
-                    Log.i("GalleryActivity", "launch -> ${Thread.currentThread().name}")
-                    initFfmpeg(false)}
-
-//                for (i in 0..count - 1) {
+//                for(i in 0..(count/2)) {
+//                    val item = data.clipData?.getItemAt(i)
+//                    if(item != null) {
+//                        sendImgs += item.uri
+//                    }
+//                }
+//                GlobalScope.launch(Dispatchers.IO) {
+//                    Log.i("GalleryActivity", "launch -> ${Thread.currentThread().name}")
+//                    NearbyCommunication.mutex.lock()
+//                    createAndSendPayload()}
+//                for (i in (count/2)+1..count - 1) {
 //                    val item = data.clipData?.getItemAt(i)
 //                    if(item != null) {
 //                        videoImgs += item.uri
@@ -181,7 +179,18 @@ class GalleryActivity : AppCompatActivity() {
 //                }
 //                GlobalScope.launch(Dispatchers.Default) {
 //                    Log.i("GalleryActivity", "launch -> ${Thread.currentThread().name}")
-//                    initFfmpeg(true)}
+//                    single = false
+//                    initFfmpeg(false)}
+
+                for (i in 0..count - 1) {
+                    val item = data.clipData?.getItemAt(i)
+                    if(item != null) {
+                        videoImgs += item.uri
+                    }
+                }
+                GlobalScope.launch(Dispatchers.Default) {
+                    Log.i("GalleryActivity", "launch -> ${Thread.currentThread().name}")
+                    initFfmpeg(true)}
 
 
 

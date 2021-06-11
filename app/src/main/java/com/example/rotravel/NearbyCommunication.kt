@@ -212,6 +212,9 @@ object NearbyCommunication {
                             var dest = File("/storage/emulated/0/Download", "$endpointId.mp4")
                             payloadFile?.renameTo(dest)
                             Log.i("onPayloadTransferUpdate", dest!!.absolutePath)
+                            //TODO: check if it works
+                            mConnClient.stopDiscovery()
+                            startAdvertising()
                         }
                     }
                 }

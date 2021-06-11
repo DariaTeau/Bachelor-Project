@@ -1,5 +1,6 @@
 package com.example.rotravel
 
+import android.content.Intent
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -38,9 +39,11 @@ class GalleryItemActivity : AppCompatActivity() {
         var itemUrl = ""
         getItemInfo()
         if(intent.getStringExtra("video") == null) {
+            video.visibility = View.INVISIBLE
             itemUrl = intent.getStringExtra("photo")
             Picasso.get().load(itemUrl).into(img)
         } else {
+            img.visibility = View.INVISIBLE
             itemUrl = intent.getStringExtra("video")
             val mediaController = MediaController(this)
             mediaController.setAnchorView(video)
@@ -72,5 +75,19 @@ class GalleryItemActivity : AppCompatActivity() {
                     descr.text = intent.getStringExtra("descr")
                 }
             }
+    }
+
+    override fun onBackPressed() {
+        if(intent.getStringExtra("video") != null) {
+            var back = Intent(this, DisplayVideosActivity::class.java).apply {}
+            back.putExtra("videos", intent.getSerializableExtra("videos"))
+            back.putExtra("details", intent.getSerializableExtra("details"))
+            startActivity(back)
+        } else {
+            var back = Intent(this, DisplayImgsActivity::class.java).apply {}
+            back.putExtra("photos", intent.getStringArrayExtra("photos"))
+            back.putExtra("details", intent.getSerializableExtra("details"))
+            startActivity(back)
+        }
     }
 }

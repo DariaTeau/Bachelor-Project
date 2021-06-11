@@ -9,9 +9,7 @@ import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Size
 import android.view.View
-import android.widget.ImageView
-import android.widget.MediaController
-import android.widget.VideoView
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.graphics.drawable.toBitmap
 import androidx.core.graphics.drawable.toDrawable
@@ -29,18 +27,23 @@ class DisplayVideosActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_display_videos)
-        var details = intent.getSerializableExtra("details") as HashMap<String, ItemDetails>
-        galleryView = findViewById(R.id.rvVidGallery)
-            galleryView.layoutManager = GridLayoutManager(
-                this,
-                3,
-                GridLayoutManager.VERTICAL,
-                false
-            )
-            val arr = intent.getStringArrayExtra("videos")
-            adapter = arr?.let { DisplayVideosAdapter(it, details) }
-            galleryView.adapter = adapter
+        var details = HashMap<String, ItemDetails>()
+        var extra = intent.getSerializableExtra("details")
+        if(extra != null) {
+            details = extra as HashMap<String, ItemDetails>
         }
+        galleryView = findViewById(R.id.rvVidGallery)
+        galleryView.layoutManager = GridLayoutManager(
+            this,
+            3,
+            GridLayoutManager.VERTICAL,
+            false
+        )
+        val arr = intent.getStringArrayExtra("videos")
+        adapter = arr?.let { DisplayVideosAdapter(it, details) }
+        galleryView.adapter = adapter
+
+    }
 }
 
 @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
@@ -50,6 +53,7 @@ class VideoItemViewHolder(val videoView: View): RecyclerView.ViewHolder(videoVie
         this.url = videoUrl
         var vid =  (videoView.findViewById(R.id.vvModel) as VideoView)
         vid.setVideoPath(videoUrl)
+        vid.setLayoutParams(RelativeLayout.LayoutParams(500,450));
         var imgView : ImageView = videoView.findViewById(R.id.ivThumbnail)
 
         imgView.visibility = View.INVISIBLE

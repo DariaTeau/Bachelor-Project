@@ -1,5 +1,6 @@
 package com.example.rotravel
 
+import android.app.Activity
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -10,7 +11,12 @@ import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
+import com.google.android.libraries.places.api.model.Place
+import com.google.android.libraries.places.widget.Autocomplete
+import com.google.android.libraries.places.widget.AutocompleteActivity
+import com.google.android.libraries.places.widget.model.AutocompleteActivityMode
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 
 class UploadPhotoActivity : AppCompatActivity(), OnMapReadyCallback,
     GoogleMap.OnInfoWindowClickListener {
@@ -19,6 +25,9 @@ class UploadPhotoActivity : AppCompatActivity(), OnMapReadyCallback,
     private var photoPos : LatLng = LatLng(0.0, 0.0)
     private var pins : Array<String> = arrayOf()
     private lateinit var bottomNav : BottomNavigationView
+    private lateinit var searchBt : FloatingActionButton
+
+    private val AUTOCOMPLETE_REQUEST_CODE = 1
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_upload_photo)
@@ -57,6 +66,9 @@ class UploadPhotoActivity : AppCompatActivity(), OnMapReadyCallback,
             }
         }
 
+        searchBt = findViewById(R.id.btSearch2)
+        searchBt.setOnClickListener { autoCompleteIntent() }
+
 
     }
 
@@ -93,7 +105,7 @@ class UploadPhotoActivity : AppCompatActivity(), OnMapReadyCallback,
         getPins()
         mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(romanianBounds, width, height, 0))
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(romanianBounds.center, 6.2f))
-        mMap.setLatLngBoundsForCameraTarget(cameraBounds)
+        //mMap.setLatLngBoundsForCameraTarget(cameraBounds)
 
         mMap.setOnMarkerDragListener(object : GoogleMap.OnMarkerDragListener {
             override fun onMarkerDrag(p0: Marker?) {
@@ -131,6 +143,52 @@ class UploadPhotoActivity : AppCompatActivity(), OnMapReadyCallback,
             val marker = LatLng(pos[0].toDouble(), pos[1].toDouble())
             mMap.addMarker(MarkerOptions().position(marker).title("Choose your picture"))
         }
+    }
+
+    private fun autoCompleteIntent() {
+
+        // Set the fields to specify which types of place data to
+        // return after the user has made a selection.
+        val fields = listOf(Place.Field.ID, Place.Field.NAME, Place.Field.LAT_LNG)
+
+        // Start the autocomplete intent.
+        val intent = Autocomplete.IntentBuilder(AutocompleteActivityMode.OVERLAY, fields)
+                .build(this)
+        startActivityForResult(intent, AUTOCOMPLETE_REQUEST_CODE)
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (requestCode == AUTOCOMPLETE_REQUEST_CODE) {
+            when (resultCode) {
+                Activity.RESULT_OK -> {
+                    data?.let {
+                        val place = Autocomplete.getPlaceFromIntent(data)
+                        Log.i("onActivityResult", "Place: ${place.name}, ${place.id}")
+                        //mMap.addMarker(MarkerOptions().position(place.latLng!!).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE)))
+                        //centerMarker.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN))
+                        val key = place.latLng?.latitude.toString() + "&" + place.latLng?.longitude.toString()
+                        if(pins.contains(key)) {
+                            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(place.latLng, 10.0f));
+                        } else {
+                            mMap.addMarker(MarkerOptions().position(place.latLng!!).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE)).title("Choose your picture"))
+                            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(place.latLng, 10.0f));
+                        }
+                    }
+                }
+                AutocompleteActivity.RESULT_ERROR -> {
+                    // TODO: Handle the error.
+                    data?.let {
+                        val status = Autocomplete.getStatusFromIntent(data)
+                        Log.i("onActivityResult", status.statusMessage!!)
+                    }
+                }
+                Activity.RESULT_CANCELED -> {
+                    // The user canceled the operation.
+                }
+            }
+            return
+        }
+        super.onActivityResult(requestCode, resultCode, data)
     }
 
 }

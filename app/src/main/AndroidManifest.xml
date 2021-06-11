@@ -41,9 +41,19 @@
         <activity
             android:name=".DestinationListActivity"
             android:label="@string/title_activity_destination_list" />
-        <activity android:name=".DisplayVideosActivity" />
+        <activity android:name=".DisplayVideosActivity"
+            android:parentActivityName=".MapActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".MapActivity" />
+        </activity>
         <activity android:name=".GalleryItemActivity" />
-        <activity android:name=".DisplayImgsActivity" />
+        <activity android:name=".DisplayImgsActivity"
+            android:parentActivityName=".MapActivity">
+            <meta-data
+            android:name="android.support.PARENT_ACTIVITY"
+            android:value=".MapActivity" />
+        </activity>
         <activity android:name=".RegisterActivity" />
         <activity
             android:name=".UserProfileActivity"

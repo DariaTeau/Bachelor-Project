@@ -8,8 +8,8 @@
 
     <ImageView
         android:id="@+id/ivInfoWin"
-        android:layout_width="211dp"
-        android:layout_height="244dp"
+        android:layout_width="93dp"
+        android:layout_height="94dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.515"
@@ -18,5 +18,22 @@
         app:layout_constraintVertical_bias="0.375"
         app:srcCompat="@drawable/bucharest"
         tools:srcCompat="@tools:sample/backgrounds/scenic" />
+
+    <TextView
+        android:id="@+id/textView3"
+        android:layout_width="161dp"
+        android:layout_height="25dp"
+        android:fontFamily="@font/bubbler_one"
+        android:text="Explore"
+        android:textAlignment="center"
+        android:textColor="#487A4A"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.497"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/ivInfoWin"
+        app:layout_constraintVertical_bias="0.064" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

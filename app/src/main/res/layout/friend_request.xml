@@ -29,15 +29,15 @@
 
         <TextView
             android:id="@+id/tvFriendName"
-            android:layout_width="109dp"
-            android:layout_height="29dp"
+            android:layout_width="189dp"
+            android:layout_height="33dp"
             android:fontFamily="@font/bubbler_one"
             android:paddingLeft="30dp"
             android:paddingTop="10dp"
             android:paddingRight="20dp"
             android:scaleType="centerCrop"
             android:text="Friend #1"
-            android:textAlignment="center"
+            android:textAlignment="viewStart"
             android:textColor="@color/black"
             android:textSize="16sp"
             android:textStyle="bold"

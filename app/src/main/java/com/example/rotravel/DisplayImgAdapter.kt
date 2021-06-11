@@ -32,6 +32,8 @@ class DisplayImgAdapter(private val photos: Array<String>, private val details :
             //bundle.putStringArray("videos", videoMap[key])
             bundle.putString("photo", url)
             intent.putExtras(bundle)
+            intent.putExtra("photos", photos)
+            intent.putExtra("details", details)
             intent.putExtra("descr", details[url]?.description)
             intent.putExtra("user", details[url]?.uid)
             ContextCompat.startActivity(img.context, intent, bundle)
