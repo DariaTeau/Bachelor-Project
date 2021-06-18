@@ -1,6 +1,7 @@
 package com.example.rotravel
 
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -38,7 +39,7 @@ class UploadPhotoActivity : AppCompatActivity(), OnMapReadyCallback,
         mapFragment.getMapAsync(this)
         pins = intent.getSerializableExtra("imgMap") as Array<String>
         pins += intent.getSerializableExtra("videoMap") as Array<String>
-
+        //}
         bottomNav = findViewById(R.id.navButton)
         //bottomNav.inflateMenu(R.menu.main_map_options)
         bottomNav.selectedItemId = R.id.uploadItem
@@ -134,6 +135,13 @@ class UploadPhotoActivity : AppCompatActivity(), OnMapReadyCallback,
 //        intent.putExtra("longitude", photoPos.longitude)
         intent.putExtra("latitude", marker.position.latitude)
         intent.putExtra("longitude", marker.position.longitude)
+        intent.putExtra("userImgMap", this.intent.getSerializableExtra("userImgMap"))
+        intent.putExtra("userVideoMap", this.intent.getSerializableExtra("userVideoMap"))
+        Log.i("onInfoWindowClick", (this.intent.getSerializableExtra("imgMap") as Array<String>).size.toString())
+        intent.putExtra("imgMap", this.intent.getSerializableExtra("imgMap"))
+        intent.putExtra("videoMap", this.intent.getSerializableExtra("videoMap"))
+        intent.putExtra("userPhotoDetails", this.intent.getSerializableExtra("userPhotoDetails"))
+        intent.putExtra("userVideoDetails", this.intent.getSerializableExtra("userVideoDetails"))
         startActivity(intent)
     }
 

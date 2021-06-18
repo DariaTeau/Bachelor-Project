@@ -40,9 +40,9 @@ class RegisterActivity : AppCompatActivity() {
     }
 
     private fun validate() {
-        var inputUser = userName.text.toString()
-        var inputEmail = userEmail.text.toString()
-        var inputPassword = userPass.text.toString()
+        var inputUser = userName.text.toString().trim()
+        var inputEmail = userEmail.text.toString().trim()
+        var inputPassword = userPass.text.toString().trim()
 
         if(inputUser.isEmpty() || inputEmail.isEmpty() || inputPassword.isEmpty()) {
             Toast.makeText(this, "Fill in all the slots", Toast.LENGTH_SHORT).show()

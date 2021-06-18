@@ -1,10 +1,12 @@
 package com.example.rotravel
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.PackageManager
 import android.os.BatteryManager
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
@@ -13,6 +15,9 @@ import android.transition.TransitionManager
 import android.util.Log
 import android.view.*
 import android.widget.*
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -34,9 +39,11 @@ import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
+import com.google.gson.Gson
 import com.squareup.picasso.Picasso
 import java.util.*
 import kotlin.collections.HashMap
+import kotlin.collections.HashSet
 
 class MapActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnInfoWindowClickListener {
 
@@ -55,6 +62,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnInfoWin
     private var photoDetails : HashMap<String, HashMap<String, ItemDetails>> = HashMap()
     private var userVideoDetails : HashMap<String, HashMap<String, ItemDetails>> = HashMap()
     private var userPhotoDetails : HashMap<String, HashMap<String, ItemDetails>> = HashMap()
+    lateinit var requestPermissionLauncher : ActivityResultLauncher<String>
 
 
     private val AUTOCOMPLETE_REQUEST_CODE = 1
@@ -70,7 +78,35 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnInfoWin
         //mapFragment.setHasOptionsMenu(true)
 
         //NearbyCommunication.doInit(this)
-
+//        window.decorView.apply {
+//            systemUiVisibility =  View.SYSTEM_UI_FLAG_LAYOUT_STABLE//or View.SYSTEM_UI_FLAG_FULLSCREEN
+//        }
+//
+//        window.decorView.setOnSystemUiVisibilityChangeListener { visibility ->
+//            // Note that system bars will only be "visible" if none of the
+//            // LOW_PROFILE, HIDE_NAVIGATION, or FULLSCREEN flags are set.
+//            if (visibility and View.SYSTEM_UI_FLAG_FULLSCREEN == 0) {
+//                // TODO: The system bars are visible. Make any desired
+//                // adjustments to your UI, such as showing the action bar or
+//                // other navigational controls.
+//                window.decorView.apply {
+//                    systemUiVisibility = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+//                }
+//            } else {
+//                // TODO: The system bars are NOT visible. Make any desired
+//                // adjustments to your UI, such as hiding the action bar or
+//                // other navigational controls.
+//            }
+//        }
+        requestPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission())
+        { isGranted: Boolean ->
+            if (isGranted) {
+                Toast.makeText(this, "Perm Granted", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(this, "Perm NOT Granted", Toast.LENGTH_SHORT).show()
+            }
+        }
+        checkPerm()
         Places.initialize(this, "AIzaSyBKM7rITzpe9u2-kEu5lt_ePs4zpg4UChg")
         placesClient = Places.createClient(this)
         fireAuth = Firebase.auth
@@ -85,6 +121,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnInfoWin
                 R.id.uploadItem -> {
                     val intent = Intent(this, UploadPhotoActivity::class.java).apply {}
                     intent.putExtra("imgMap", imgMap.keys.toTypedArray())
+                    //updateStorage()
                     intent.putExtra("videoMap", videoMap.keys.toTypedArray())
                     intent.putExtra("userImgMap", userImgMap)
                     intent.putExtra("userVideoMap", userVideoMap)
@@ -129,6 +166,50 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnInfoWin
 //        fireDB.child("Photos").addValueEventListener(postListener)
         checkRequests()
     }
+
+    private fun checkPerm() {
+        var isGranted = ContextCompat.checkSelfPermission(this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+        )
+        if(isGranted == PackageManager.PERMISSION_DENIED) {
+            requestPermissionLauncher.launch(
+                    Manifest.permission.ACCESS_FINE_LOCATION)
+        }
+
+        isGranted = ContextCompat.checkSelfPermission(this,
+                Manifest.permission.READ_EXTERNAL_STORAGE
+        )
+        if(isGranted == PackageManager.PERMISSION_DENIED) {
+            requestPermissionLauncher.launch(
+                    Manifest.permission.READ_EXTERNAL_STORAGE)
+        }
+
+        isGranted = ContextCompat.checkSelfPermission(this,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE
+        )
+        if(isGranted == PackageManager.PERMISSION_DENIED) {
+            requestPermissionLauncher.launch(
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE)
+        } else {
+            Log.i("checkperm", "pot sa scriu")
+
+        }
+
+    }
+
+    private fun updateStorage() {
+        val sharedPref = this.getPreferences(Context.MODE_PRIVATE) ?: return
+        with (sharedPref.edit()) {
+            //putInt(getString(R.string.saved_high_score_key), newHighScore)
+            var g = Gson()
+            //putString("imgMap", g.toJson(imgMap))
+            Log.i("updateStorage", "pun elementele")
+            putStringSet("imgMap", imgMap.keys)
+            putStringSet("videoMap", videoMap.keys)
+            apply()
+        }
+    }
+
 
     /**
      * Manipulates the map once available.
@@ -213,6 +294,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnInfoWin
         var done : Button = view.findViewById(R.id.btDone)
         done.setOnClickListener {
             destDescr = descr.text.toString()
+            done.isEnabled = destDescr.isNotEmpty()
             addToDestList(marker)
             popupWindow.dismiss()}
         popupWindow.showAtLocation(this.bottomNav, Gravity.CENTER, 0, 20)
@@ -227,10 +309,16 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnInfoWin
         var bundle : Bundle = Bundle()
         val key = marker.position.latitude.toString() + "&" + marker.position.longitude.toString()
         //bundle.putStringArray("videos", videoMap[key])
-        bundle.putStringArray("photos", imgMap[key])
-        intent.putExtra("details", photoDetails[key])
-        intent.putExtras(bundle);
-        startActivity(intent)
+        if(imgMap[key] == null || imgMap[key]!!.isEmpty())  {
+            val toast = Toast.makeText(this, "No images available yet \n          Retry later", Toast.LENGTH_LONG);
+            toast.setGravity(Gravity.CENTER, 0, 0);
+            toast.show();
+        } else {
+            bundle.putStringArray("photos", imgMap[key])
+            intent.putExtra("details", photoDetails[key])
+            intent.putExtras(bundle);
+            startActivity(intent)
+        }
 
     }
 
@@ -239,11 +327,17 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnInfoWin
         //val intent = Intent(this, GalleryItemActivity::class.java).apply {}
         var bundle : Bundle = Bundle()
         val key = marker.position.latitude.toString() + "&" + marker.position.longitude.toString()
-        bundle.putStringArray("videos", videoMap[key])
-        //bundle.putStringArray("photos", imgMap[key])
-        intent.putExtra("details", videoDetails[key])
-        intent.putExtras(bundle);
-        startActivity(intent)
+        if(videoMap[key] == null || videoMap[key]!!.isEmpty())  {
+            val toast = Toast.makeText(this, "No videos available yet \n          Retry later", Toast.LENGTH_LONG);
+            toast.setGravity(Gravity.CENTER, 0, 0);
+            toast.show();
+        } else {
+            bundle.putStringArray("videos", videoMap[key])
+            //bundle.putStringArray("photos", imgMap[key])
+            intent.putExtra("details", videoDetails[key])
+            intent.putExtras(bundle);
+            startActivity(intent)
+        }
 
     }
 

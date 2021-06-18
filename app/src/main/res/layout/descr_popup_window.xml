@@ -13,30 +13,30 @@
         android:layout_marginBottom="4dp"
         android:ems="10"
         android:fontFamily="@font/bubbler_one"
-        android:hint="Cascada Bigar"
+        android:hint="e.g. Cascada Bigar"
         android:inputType="textShortMessage|textPersonName|text"
-        android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.497"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tvExplain"
-        app:layout_constraintVertical_bias="0.0" />
+        app:layout_constraintVertical_bias="0.304" />
 
     <TextView
         android:id="@+id/tvExplain"
-        android:layout_width="311dp"
-        android:layout_height="38dp"
+        android:layout_width="310dp"
+        android:layout_height="25dp"
         android:fontFamily="@font/bubbler_one"
-        android:text="Add a name for ypur future destination"
+        android:text="Add a name for your future destination"
+        android:textAlignment="center"
         android:textSize="18sp"
         android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.493"
+        app:layout_constraintHorizontal_bias="0.495"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.438" />
+        app:layout_constraintVertical_bias="0.186" />
 
     <Button
         android:id="@+id/btDone"
@@ -50,5 +50,20 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/etDestName"
         app:layout_constraintVertical_bias="0.062" />
+
+    <TextView
+        android:id="@+id/textView4"
+        android:layout_width="282dp"
+        android:layout_height="27dp"
+        android:fontFamily="@font/bubbler_one"
+        android:text="Make sure you introduce a name before clicking done"
+        android:textAlignment="center"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.496"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tvExplain"
+        app:layout_constraintVertical_bias="0.0" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

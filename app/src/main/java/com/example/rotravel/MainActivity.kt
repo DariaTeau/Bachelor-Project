@@ -152,8 +152,8 @@ class MainActivity : AppCompatActivity() {
     }
 
      fun login() {
-        var inputUser = user.text.toString()
-        var inputPassword = password.text.toString()
+        var inputUser = user.text.toString().trim()
+        var inputPassword = password.text.toString().trim()
 
         if(inputUser == "ana" && inputPassword == "1234") {
             Toast.makeText(this, "Successful Login", Toast.LENGTH_SHORT).show()

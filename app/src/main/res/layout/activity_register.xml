@@ -76,6 +76,8 @@
         android:inputType="textPassword"
         android:textColor="#3C4A3C"
         android:textStyle="bold"
+        app:passwordToggleEnabled="true"
+        app:passwordToggleTint="#82A35B"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.497"

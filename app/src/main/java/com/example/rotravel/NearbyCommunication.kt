@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.media.ExifInterface
 import android.net.Uri
+import android.os.CountDownTimer
 import android.os.ParcelFileDescriptor
 import android.util.Log
 import android.widget.VideoView
@@ -16,19 +17,22 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import java.io.File
+import java.io.Serializable
 
 @SuppressLint("StaticFieldLeak")
 object NearbyCommunication {
     private lateinit var connectionLifecycleCallback : ConnectionLifecycleCallback
     private lateinit var endpointDiscoveryCallback : EndpointDiscoveryCallback
     private lateinit var payloadCallback : PayloadCallback
-    private lateinit var mConnClient : ConnectionsClient
+    lateinit var mConnClient : ConnectionsClient
+    lateinit var countDownTimer : CountDownTimer
     private var discover = false
     private var connInitiated = false
     private var ENDPOINT = ""
     var transferBackEndpoint = ""
     private var ready = false
     private var nrPhotos = 0
+    var waitForEndpoints = -1
     private lateinit var transferBackPayload : Payload
     private var transferBackId : Long = -1
     private var payloads : HashMap<Long, Payload> = HashMap()
@@ -37,7 +41,14 @@ object NearbyCommunication {
     private var videoImgs : Array<Uri> = arrayOf<Uri>()
     private var toSendPayload : Array<Payload> = arrayOf()
     private var paths : Array<String> = arrayOf<String>()
+    var endpointsMap : HashMap<String, Array<Payload>> = HashMap()
+    var endpointsMutex : HashMap<String, Mutex> = HashMap()
+    var transferBack : HashMap<String, PayloadDetails> = HashMap()
     val mutex : Mutex = Mutex()
+    val TIMEOUT_DISCOVERY_MILLIS: Long = 15000
+    val SECOND_MILLIS: Long = 1000
+    var timedOut = false
+    var initiated = false
     init {
 //        initPayloadCallback()
 //        advCallback()
@@ -82,14 +93,16 @@ object NearbyCommunication {
                     ConnectionsStatusCodes.STATUS_OK ->
                         // We're connected! Can now start sending and receiving data.
                     {
+                        initiated = true
                         Log.i("OnConnectionResult", "connection accepted")
                         if (discover) {
                             ENDPOINT = endpointId
+                            endpointsMap[endpointId] = arrayOf<Payload>()
                             //selectMultiple(endpointId)
-                            mConnClient.sendPayload(
-                                endpointId,
-                                Payload.fromBytes(toSendPayload.size.toString().toByteArray())
-                            )
+//                            mConnClient.sendPayload(
+//                                endpointId,
+//                                Payload.fromBytes(toSendPayload.size.toString().toByteArray())
+//                            )
                         }
                     }
                     ConnectionsStatusCodes.STATUS_CONNECTION_REJECTED ->
@@ -166,8 +179,11 @@ object NearbyCommunication {
 
                 } else {
                     if(payload.type == Payload.Type.FILE) {
-                        transferBackPayload = payload
-                        transferBackId = payload.id
+                        endpointsMutex[endpointId] = Mutex()
+                        Log.i("ReceivePayload", "am primit de la " + endpointId + " payloadul " + payload.id)
+                        transferBack[endpointId] = PayloadDetails(payload, payload.id)
+//                        transferBackPayload = payload
+//                        transferBackId = payload.id
                     } else {
                         var receivedBytes : ByteArray? = payload.asBytes()
                         Log.i("PayloadRceived", String(receivedBytes!!))
@@ -204,17 +220,30 @@ object NearbyCommunication {
                 }
 
                 if(discover && update.status == PayloadTransferUpdate.Status.SUCCESS) {
-                    if(update.payloadId == transferBackId) {
-                        if(transferBackPayload != null) {
-                            var payloadFile = transferBackPayload?.asFile()!!.asJavaFile()
-                            transferBackEndpoint = endpointId
-                            mutex.unlock()
-                            var dest = File("/storage/emulated/0/Download", "$endpointId.mp4")
-                            payloadFile?.renameTo(dest)
-                            Log.i("onPayloadTransferUpdate", dest!!.absolutePath)
-                            //TODO: check if it works
-                            mConnClient.stopDiscovery()
-                            startAdvertising()
+                    if(transferBack[endpointId] != null) {
+                        if (update.payloadId == transferBack[endpointId]!!.payloadId) {
+                            transferBackPayload = transferBack[endpointId]!!.payload
+                            if (transferBackPayload != null) {
+                                var payloadFile = transferBackPayload?.asFile()!!.asJavaFile()
+                                //                            transferBackEndpoint = endpointId
+                                //                            mutex.unlock()
+                                Log.i("onPayloadUpdate", transferBack.size.toString())
+                                Log.i("onPayloadUpdate", "o sa scot " + endpointId + " payload " + update.payloadId)
+                                Log.i("onPayloadUpdate", "am ramas cu " + transferBack.size.toString())
+                                transferBack.remove(endpointId)
+                                waitForEndpoints--
+                                if (waitForEndpoints == 0) {
+                                    mutex.unlock()
+                                }
+                                //endpointsMutex[endpointId]!!.unlock()
+
+                                var dest = File("/storage/emulated/0/Download", "$endpointId.mp4")
+                                payloadFile?.renameTo(dest)
+                                Log.i("onPayloadTransferUpdate", dest!!.absolutePath)
+                                //TODO: check if it works
+                                mConnClient.stopDiscovery()
+                                startAdvertising()
+                            }
                         }
                     }
                 }
@@ -225,16 +254,21 @@ object NearbyCommunication {
     private fun sendPayload(endpointId : String) {
         //selectMultiple()
         Log.i("createAndSendPayload", "am intrat")
-        for (filePayload in toSendPayload) {
+//        for (filePayload in toSendPayload) {
+//            mConnClient.sendPayload(endpointId, filePayload)
+//
+//        }
+        for (filePayload in endpointsMap[endpointId]!!) {
             mConnClient.sendPayload(endpointId, filePayload)
 
         }
+
         Log.i("createAndSendPayload", "am iesit")
     }
 
-    fun doDiscover(imgs : Array<Payload>) {
+    fun doDiscover() {
         Log.i("doDiscover", "running on ${Thread.currentThread().name}")
-        toSendPayload = imgs
+        //toSendPayload = imgs
 
         mConnClient.stopAdvertising()
         discover = true
@@ -339,5 +373,6 @@ object NearbyCommunication {
         return comm
     }
 
+    data class PayloadDetails(val payload : Payload, val payloadId: Long) : Serializable {}
 
 }

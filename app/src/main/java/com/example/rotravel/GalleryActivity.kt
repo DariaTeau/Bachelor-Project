@@ -10,6 +10,7 @@ import android.net.Uri
 import android.opengl.Visibility
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.CountDownTimer
 import android.os.ParcelFileDescriptor
 import android.provider.MediaStore
 import android.util.Log
@@ -35,9 +36,12 @@ import com.google.firebase.storage.ktx.storage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.util.*
+import java.util.stream.IntStream.range
+import kotlin.math.roundToInt
 
 class GalleryActivity : AppCompatActivity() {
     private lateinit var galleryButton: FloatingActionButton
@@ -59,6 +63,7 @@ class GalleryActivity : AppCompatActivity() {
     private var begin : Long = 0
     private var end : Long = 0
     private var single = true
+    private var singleMutex = Mutex()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         //NearbyCommunication.doInit(this)
@@ -82,6 +87,7 @@ class GalleryActivity : AppCompatActivity() {
         }
 
         uploadButton.setOnClickListener { uploadToFirebase() }
+        createTimer()
 
     }
 
@@ -133,9 +139,7 @@ class GalleryActivity : AppCompatActivity() {
 
         }
     }
-    private fun edit() {
 
-    }
     private fun selectMultiple() {
         var intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.INTERNAL_CONTENT_URI)
         // sau action pick?
@@ -167,11 +171,38 @@ class GalleryActivity : AppCompatActivity() {
 //                        sendImgs += item.uri
 //                    }
 //                }
-//                GlobalScope.launch(Dispatchers.IO) {
-//                    Log.i("GalleryActivity", "launch -> ${Thread.currentThread().name}")
-//                    NearbyCommunication.mutex.lock()
-//                    createAndSendPayload()}
+                for (i in 0..count - 1) {
+                    val item = data.clipData?.getItemAt(i)
+                    if(item != null) {
+                        sendImgs += item.uri
+                    }
+                }
+
+                GlobalScope.launch(Dispatchers.IO) {
+                    singleMutex.lock()
+                    Log.i("GalleryActivity", "launch -> ${Thread.currentThread().name}")
+                    NearbyCommunication.mutex.lock()
+                    //createAndSendPayload()
+                    startConnectionTimer()
+                    NearbyCommunication.doDiscover()
+                }
 //                for (i in (count/2)+1..count - 1) {
+//                    val item = data.clipData?.getItemAt(i)
+//                    if(item != null) {
+//                        videoImgs += item.uri
+//                    }
+//                }
+
+                GlobalScope.launch(Dispatchers.Default) {
+                    Log.i("GalleryActivity", "launch -> ${Thread.currentThread().name}")
+                    //single = false
+                    while(!singleMutex.isLocked){}
+                    singleMutex.lock()
+                    initFfmpeg(single)
+                    singleMutex.unlock()
+                }
+
+//                for (i in 0..count - 1) {
 //                    val item = data.clipData?.getItemAt(i)
 //                    if(item != null) {
 //                        videoImgs += item.uri
@@ -179,18 +210,7 @@ class GalleryActivity : AppCompatActivity() {
 //                }
 //                GlobalScope.launch(Dispatchers.Default) {
 //                    Log.i("GalleryActivity", "launch -> ${Thread.currentThread().name}")
-//                    single = false
-//                    initFfmpeg(false)}
-
-                for (i in 0..count - 1) {
-                    val item = data.clipData?.getItemAt(i)
-                    if(item != null) {
-                        videoImgs += item.uri
-                    }
-                }
-                GlobalScope.launch(Dispatchers.Default) {
-                    Log.i("GalleryActivity", "launch -> ${Thread.currentThread().name}")
-                    initFfmpeg(true)}
+//                    initFfmpeg(true)}
 
 
 
@@ -210,8 +230,71 @@ class GalleryActivity : AppCompatActivity() {
 //    + /sdcard/videolit/output.mp4;
 
 
+    fun createTimer() {
+        NearbyCommunication.countDownTimer = object : CountDownTimer(NearbyCommunication.TIMEOUT_DISCOVERY_MILLIS, NearbyCommunication.SECOND_MILLIS) {
 
+            override fun onTick(millisUntilFinished: Long) {
+                Log.d("ADVERT", "seconds remaining: " + millisUntilFinished / NearbyCommunication.SECOND_MILLIS)
+            }
 
+            override fun onFinish() {
+                NearbyCommunication.waitForEndpoints = NearbyCommunication.endpointsMap.size
+                NearbyCommunication.timedOut = true
+                if (!NearbyCommunication.initiated) {
+                    single = true
+                    videoImgs = sendImgs
+                    singleMutex.unlock()
+                    NearbyCommunication.mConnClient.stopDiscovery()
+                } else {
+                    single = false
+//                    val imgsNo = sendImgs.size
+//                    val tasks = NearbyCommunication.endpointsMap.size + 1
+//                    val start = (0 * Math.ceil(((imgsNo-1) * 1.0)/tasks)).roundToInt()
+//                    var stop = imgsNo - 1
+//                    if((0 + 1) * Math.ceil(((imgsNo-1) * 1.0)/tasks) < imgsNo - 1) {
+//                        stop = ((0 + 1) * Math.ceil(((imgsNo-1) * 1.0)/tasks)).roundToInt()
+//                        stop--
+//                    }
+//                    videoImgs = sendImgs.sliceArray(start..stop)
+//                    singleMutex.unlock()
+//                    createPayload()
+                }
+            }
+        }
+    }
+    fun startConnectionTimer() {
+
+        NearbyCommunication.countDownTimer.start()
+
+    }
+
+    private fun createPayload() {
+        val imgsNo = sendImgs.size
+        val tasks = NearbyCommunication.endpointsMap.size + 1
+        var idx = 1
+        for(endpoint in NearbyCommunication.endpointsMap.keys) {
+            val start = (idx * Math.ceil(((imgsNo-1) * 1.0)/tasks)).roundToInt()
+            var stop = imgsNo - 1
+            if((idx + 1) * Math.ceil(((imgsNo-1) * 1.0)/tasks) < imgsNo - 1) {
+                stop = ((idx + 1) * Math.ceil(((imgsNo-1) * 1.0)/tasks)).roundToInt()
+                stop--
+            }
+            for(i in start..stop) {
+                var pfd : ParcelFileDescriptor? = contentResolver.openFileDescriptor(sendImgs[i], "r");
+                var filePayload = Payload.fromFile(pfd!!)
+                var x = NearbyCommunication.endpointsMap[endpoint]
+                if(x != null) {
+                    x += filePayload
+                    NearbyCommunication.endpointsMap[endpoint] = x
+                }
+            }
+            idx++
+            NearbyCommunication.mConnClient.sendPayload(
+                                endpoint,
+                                Payload.fromBytes(NearbyCommunication.endpointsMap[endpoint]!!.size.toString().toByteArray())
+                            )
+        }
+    }
 
 
     private suspend fun initFfmpeg(single : Boolean) {
@@ -365,7 +448,7 @@ class GalleryActivity : AppCompatActivity() {
             send += filePayload
 
         }
-        NearbyCommunication.doDiscover(send)
+        NearbyCommunication.doDiscover()
         Log.i("createAndSendPayload", "am iesit")
 
     }
@@ -381,14 +464,23 @@ class GalleryActivity : AppCompatActivity() {
         var comm = arrayOf<String>()
         comm += "-i"
         comm += "/storage/emulated/0/Videos/output.mp4"
-        comm += "-i"
+        //comm += "-i"
         //comm += "/storage/emulated/0/Download/18GP.mp4"
 //        while (NearbyCommunication.transferBackEndpoint == "") {
 //        }
         NearbyCommunication.mutex.lock()
-        comm += "/storage/emulated/0/Download/" + NearbyCommunication.transferBackEndpoint + ".mp4"
+        var filter_complex = "[0]"
+        var idx = 1
+        for(endpoint in NearbyCommunication.endpointsMutex.keys) {
+            comm += "-i"
+            comm += "/storage/emulated/0/Download/" + endpoint + ".mp4"
+            filter_complex += "[" + idx + "]"
+            idx++
+        }
+        filter_complex += "concat=n=" + (NearbyCommunication.endpointsMutex.size + 1) + ":v=1[v]"
         comm += "-filter_complex"
-        comm += "[0][1]concat=n=2:v=1,format=yuv420p[v]"
+        comm += filter_complex
+        //,format=yuv420p
         comm += "-map"
         comm += "[v]"
         comm += "-y"
@@ -396,6 +488,17 @@ class GalleryActivity : AppCompatActivity() {
         NearbyCommunication.mutex.unlock()
 
         return comm
+    }
+
+    override fun onBackPressed() {
+        val intent = Intent(this, UploadPhotoActivity::class.java).apply {}
+        intent.putExtra("userImgMap", this.intent.getSerializableExtra("userImgMap"))
+        intent.putExtra("userVideoMap", this.intent.getSerializableExtra("userVideoMap"))
+        intent.putExtra("imgMap", this.intent.getSerializableExtra("imgMap"))
+        intent.putExtra("videoMap", this.intent.getSerializableExtra("videoMap"))
+        intent.putExtra("userPhotoDetails", this.intent.getSerializableExtra("userPhotoDetails"))
+        intent.putExtra("userVideoDetails", this.intent.getSerializableExtra("userVideoDetails"))
+        startActivity(intent)
     }
 
 }

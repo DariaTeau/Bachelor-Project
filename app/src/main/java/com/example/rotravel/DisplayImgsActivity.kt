@@ -1,5 +1,6 @@
 package com.example.rotravel
 
+import android.content.Intent
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -30,6 +31,11 @@ class DisplayImgsActivity : AppCompatActivity() {
         val arr = intent.getStringArrayExtra("photos")
         adapter = arr?.let { DisplayImgAdapter(it, details) }
         galleryView.adapter = adapter
+    }
+
+    override fun onBackPressed() {
+        val intent = Intent(this, MapActivity::class.java)
+        startActivity(intent)
     }
 }
 

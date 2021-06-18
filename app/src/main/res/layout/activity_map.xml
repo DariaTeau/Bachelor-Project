@@ -4,7 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MapActivity">
+    tools:context=".MapActivity"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/navButton"
@@ -14,9 +15,9 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/uploadMap"
         app:layout_constraintVertical_bias="1.0"
         app:menu="@menu/main_map_options" />
+    <!--        app:layout_constraintTop_toBottomOf="@+id/uploadMap"-->
 
     <fragment
         android:id="@+id/uploadMap"

@@ -32,6 +32,7 @@ class DisplayImgAdapter(private val photos: Array<String>, private val details :
             //bundle.putStringArray("videos", videoMap[key])
             bundle.putString("photo", url)
             intent.putExtras(bundle)
+            intent.putExtra("pos", position)
             intent.putExtra("photos", photos)
             intent.putExtra("details", details)
             intent.putExtra("descr", details[url]?.description)
